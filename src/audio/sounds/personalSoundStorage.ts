@@ -3,7 +3,7 @@ import type { PersonalSound, PersonalSoundRecord } from './soundTypes.ts'
 
 const DATABASE_NAME = 'handchord-personal-sounds'
 const STORE_NAME = 'sounds'
-const DATABASE_VERSION = 2
+const DATABASE_VERSION = 3
 
 function openDatabase(): Promise<IDBDatabase> {
   if (typeof indexedDB === 'undefined') return Promise.reject(new Error('IndexedDB is unavailable in this browser.'))
@@ -11,8 +11,8 @@ function openDatabase(): Promise<IDBDatabase> {
     const request = indexedDB.open(DATABASE_NAME, DATABASE_VERSION)
     request.onupgradeneeded = () => {
       if (!request.result.objectStoreNames.contains(STORE_NAME)) request.result.createObjectStore(STORE_NAME, { keyPath: 'id' })
-      // Version 2 keeps the same store and lazily normalises older `loop` fields
-      // when records are read, so existing local sounds remain usable.
+      // Version 3 keeps the same store and lazily normalises older loop/import
+      // records when read, so existing local sounds remain usable.
     }
     request.onsuccess = () => resolve(request.result)
     request.onerror = () => reject(new Error('Could not open the personal-sounds database.'))
@@ -22,7 +22,7 @@ function openDatabase(): Promise<IDBDatabase> {
 export function normalisePersonalSoundRecord(value: unknown): PersonalSoundRecord | null {
   if (!value || typeof value !== 'object') return null
   const sound = value as Partial<PersonalSoundRecord> & { loop?: unknown; loopEnabled?: unknown; loopStartSeconds?: unknown; loopEndSeconds?: unknown; loopCrossfadeSeconds?: unknown }
-  if (typeof sound.id !== 'string' || typeof sound.name !== 'string' || sound.sourceType !== 'personal-sample'
+  if (typeof sound.id !== 'string' || typeof sound.name !== 'string' || (sound.sourceType !== 'personal-sample' && sound.sourceType !== 'recorded')
     || (sound.mode !== 'instrument' && sound.mode !== 'one-shot') || !(sound.audioData instanceof ArrayBuffer)
     || !Number.isFinite(sound.rootMidiNote) || !Number.isFinite(sound.trimStartSeconds) || !Number.isFinite(sound.trimEndSeconds)
     || !Number.isFinite(sound.fadeInSeconds) || !Number.isFinite(sound.fadeOutSeconds) || !Number.isFinite(sound.normalisationGain)
@@ -30,13 +30,15 @@ export function normalisePersonalSoundRecord(value: unknown): PersonalSoundRecor
 
   const trimStart = sound.trimStartSeconds as number
   const trimEnd = sound.trimEndSeconds as number
+  const originalMimeType = typeof sound.originalMimeType === 'string' ? sound.originalMimeType : null
+  const recordingDurationSeconds = Number.isFinite(sound.recordingDurationSeconds) ? sound.recordingDurationSeconds as number : null
   const requestedStart = typeof sound.loopStartSeconds === 'number' ? sound.loopStartSeconds : trimStart
   const requestedEnd = typeof sound.loopEndSeconds === 'number' ? sound.loopEndSeconds : trimEnd
   const requestedCrossfade = typeof sound.loopCrossfadeSeconds === 'number' ? sound.loopCrossfadeSeconds : undefined
   const requestedLoop = (sound.loopEnabled === true || (sound.loopEnabled === undefined && sound.loop === true))
     && requestedStart === trimStart && requestedEnd === trimEnd
   const loop = createLoopSettings(sound.mode, requestedLoop, trimStart, trimEnd, requestedCrossfade)
-  return { ...sound, ...loop } as PersonalSoundRecord
+  return { ...sound, originalMimeType, recordingDurationSeconds, ...loop } as PersonalSoundRecord
 }
 
 export function isPersonalSoundRecord(value: unknown): value is PersonalSoundRecord {

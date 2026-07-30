@@ -174,6 +174,63 @@ export function samplePlaybackRate(note: number, rootMidiNote: number) {
   return Math.min(MAX_SAMPLE_PLAYBACK_RATE, Math.max(MIN_SAMPLE_PLAYBACK_RATE, rate))
 }
 
+export const SAMPLE_CHORD_LOOKAHEAD_SECONDS = 0.015
+export const MIN_SCHEDULED_SAMPLE_DURATION_SECONDS = 0.012
+
+export type SampleChordTiming = {
+  startTime: number
+  sharedDurationSeconds: number
+  attackSeconds: number
+  releaseSeconds: number
+  releaseStartTime: number
+  stopTime: number
+  naturalVoiceDurations: number[]
+}
+
+/** A higher playback rate consumes the same trimmed buffer in less wall-clock time. */
+export function calculateNaturalVoiceDuration(playableDurationSeconds: number, finalPlaybackRate: number) {
+  if (!Number.isFinite(playableDurationSeconds) || !Number.isFinite(finalPlaybackRate) || playableDurationSeconds <= 0 || finalPlaybackRate <= 0) return 0
+  return playableDurationSeconds / finalPlaybackRate
+}
+
+/**
+ * Gives a non-looping sampled chord one timeline. The shortest pitched voice
+ * determines the group length so a lower voice is intentionally truncated,
+ * rather than allowing every note to end at a different time.
+ */
+export function createSampleChordTiming(
+  playableDurationSeconds: number,
+  finalPlaybackRates: number[],
+  startTime: number,
+  requestedAttackSeconds: number,
+  requestedReleaseSeconds: number,
+): SampleChordTiming {
+  const naturalVoiceDurations = finalPlaybackRates.map((rate) => calculateNaturalVoiceDuration(playableDurationSeconds, rate))
+  const sharedDurationSeconds = Math.min(...naturalVoiceDurations)
+  if (!Number.isFinite(startTime) || sharedDurationSeconds < MIN_SCHEDULED_SAMPLE_DURATION_SECONDS) {
+    throw new Error('This selected sample region is too short to play safely at the requested pitch.')
+  }
+
+  // Keep attack and release inside a short sample instead of creating overlapping
+  // or backwards Web Audio automation times.
+  const attackSeconds = Math.min(Math.max(0, requestedAttackSeconds), sharedDurationSeconds * 0.35)
+  const releaseSeconds = Math.min(
+    Math.max(0, requestedReleaseSeconds),
+    sharedDurationSeconds * 0.45,
+    Math.max(0, sharedDurationSeconds - attackSeconds),
+  )
+  const stopTime = startTime + sharedDurationSeconds
+  return {
+    startTime,
+    sharedDurationSeconds,
+    attackSeconds,
+    releaseSeconds,
+    releaseStartTime: stopTime - releaseSeconds,
+    stopTime,
+    naturalVoiceDurations,
+  }
+}
+
 export function nearestSampleOctave(note: number, rootMidiNote: number) {
   let adjusted = note
   while (adjusted - rootMidiNote > 12) adjusted -= 12

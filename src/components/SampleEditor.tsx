@@ -1,11 +1,11 @@
 import { useMemo } from 'react'
 import type { AudioEngine } from '../audio/AudioEngine.ts'
 import { calculateNormalisationGain, createLoopSettings, createWaveformPeaks, parseRootNote, validateLoopRegion, validateTrim } from '../audio/sounds/sampleMath.ts'
-import { DEFAULT_FADE_SECONDS, type PersonalSoundMode } from '../audio/sounds/soundTypes.ts'
+import { DEFAULT_FADE_SECONDS, type PersonalSoundMode, type PersonalSoundSourceType } from '../audio/sounds/soundTypes.ts'
 import { SampleWaveform } from './SampleWaveform.tsx'
 
 export type SampleDraft = {
-  name: string; originalFileName: string; mode: PersonalSoundMode; rootNoteName: string; rootOctave: number
+  name: string; originalFileName: string; originalMimeType: string | null; recordingDurationSeconds: number | null; sourceType: PersonalSoundSourceType; mode: PersonalSoundMode; rootNoteName: string; rootOctave: number
   trimStartSeconds: number; trimEndSeconds: number; fadeInSeconds: number; fadeOutSeconds: number
   normalise: boolean; reverse: boolean; loopEnabled: boolean; loopCrossfadeSeconds: number
 }
@@ -23,7 +23,7 @@ export function SampleEditor({ buffer, draft, engine, message, onChange, onSave,
   const preview = () => {
     if (!trim.ok || rootMidi === null) return
     const sound = {
-      id: 'preview', name: draft.name, sourceType: 'personal-sample' as const, mode: draft.mode, originalFileName: draft.originalFileName,
+      id: 'preview', name: draft.name, sourceType: draft.sourceType, mode: draft.mode, originalFileName: draft.originalFileName, originalMimeType: draft.originalMimeType, recordingDurationSeconds: draft.recordingDurationSeconds,
       rootMidiNote: rootMidi, trimStartSeconds: draft.trimStartSeconds, trimEndSeconds: draft.trimEndSeconds,
       fadeInSeconds: draft.fadeInSeconds, fadeOutSeconds: draft.fadeOutSeconds,
       normalisationGain: draft.normalise ? calculateNormalisationGain(buffer) : 1, reverse: draft.reverse,
@@ -33,7 +33,7 @@ export function SampleEditor({ buffer, draft, engine, message, onChange, onSave,
     try { engine.previewPersonalSound(sound, buffer) } catch { /* The surrounding panel displays the recovery message. */ }
   }
   return <section className="reverb-panel" aria-labelledby="sample-editor-title">
-    <div className="gesture-audio-heading"><div><p className="eyebrow">Local sample editor</p><h2 id="sample-editor-title">{draft.originalFileName}</h2></div><button className="secondary-button" type="button" onClick={onCancel}>Cancel</button></div>
+    <div className="gesture-audio-heading"><div><p className="eyebrow">{draft.sourceType === 'recorded' ? 'Local microphone recording' : 'Local sample editor'}</p><h2 id="sample-editor-title">{draft.originalFileName}</h2></div><button className="secondary-button" type="button" onClick={onCancel}>Cancel</button></div>
     <p className="gesture-audio-message">Trim and sound settings are saved as metadata with the original local audio file.</p>
     <SampleWaveform peaks={peaks} trimStart={draft.trimStartSeconds} trimEnd={draft.trimEndSeconds} duration={buffer.duration} />
     <div className="audio-controls">

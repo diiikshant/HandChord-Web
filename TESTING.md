@@ -109,6 +109,17 @@
 - Refresh and restart Chrome. Confirm saved sounds remain. Temporarily simulate missing saved audio data only if comfortable; confirm the app gives a recovery message rather than crashing.
 - Confirm the browser makes no network upload, no microphone request, and no red console errors. Test speakers and headphones for clipping and pitch-shifting quality.
 
+## Microphone recording for personal sounds
+
+- With the camera active, open **Record Sound**. Confirm no microphone permission is requested until **Start Recording** is selected, and that starting/stopping microphone capture never stops the camera preview or camera indicator.
+- Accept permission. Confirm the 3/2/1 countdown is visible, **Cancel countdown** stops the microphone indicator, and the next attempt can start normally. Deny permission, use an unavailable microphone, or occupy it in another app if practical; confirm clear denied/unavailable/busy states and **Try Again**.
+- Record a short sound. Confirm the input meter reacts, elapsed and remaining time update, **Stop Recording** works, and the microphone indicator turns off before the editor opens. Make a second recording and confirm it automatically stops at 10 seconds.
+- Record a near-silent clip. Confirm the warning appears and normalisation is off by default. Record audible audio with quiet leading/trailing space and confirm editable auto-trim suggestions appear; quiet material in the middle must remain.
+- Use **Record Again**, **Use Recording**, and **Cancel**. In the existing editor, test preview, manual trim, fades, normalisation, reverse, Instrument mode, One-shot mode, root note, and Loop Sample.
+- Save a recorded sound, then test button chords, gesture chords, all four effects, instrument switching, source switching, Stop, both-fist stop, Gesture Audio off, and page/tab hiding. Confirm no stuck voices or loops and the camera remains active.
+- Refresh and restart Chrome. Confirm recorded sounds persist with their metadata, loop configuration, edits, renames, duplicates, and deletes. Confirm corrupt/missing records show a recovery message rather than crashing.
+- Test speakers and headphones. Confirm no network upload, no red console errors, and that microphone tracks/indicator stop after completion, cancellation, error, or page hiding.
+
 ## Instrument sample looping
 
 - Import or edit an Instrument-mode personal sound. Confirm **Loop Sample** is off by default, the sample plays once from trim start to trim end, and an audio file that ends while a chord is held becomes silent.
@@ -191,3 +202,12 @@
 - Briefly hide the left hand, then keep it hidden longer than 500 ms. Confirm the last distortion amount stays safe, the panel reports unavailable, right-hand tape delay continues normally, and the chord continues.
 - Turn Distortion Control off while a chord is playing. Confirm it returns smoothly to clean 0% wet while reverb, tape delay, chorus, tracking, and the chord continue.
 - Refresh and confirm saved calibration remains available. Test speakers and headphones for clipping or loudness surges, and confirm the Chrome console has no red errors or microphone request.
+## Sampled chord-duration synchronisation
+
+- Select a non-looping Instrument-mode personal sound and play a three-note sample chord. Confirm every note starts and ends together, even though the diagnostics show different playback rates and natural durations.
+- Repeat with a four-note chord, a wide voicing, a high-pitched chord, and a low-pitched chord. Confirm lower notes do not continue after the highest note ends.
+- Test a short sample and a long sample, then trim and reverse each one. Confirm the shared duration is calculated from the selected playable trim region and no errors appear for usable samples.
+- Enable Loop Sample and sustain a chord. Change chords, use Stop, both-fist stop, Gesture Audio off, instrument switching, and a page/tab hide. Confirm all looping voices release together and no loop stays active.
+- Test rapid chord changes and repeated unchanged gesture chords. Confirm old groups release cleanly, an unchanged chord does not create duplicates, and active group/member diagnostics return to zero after release.
+- Verify button-controlled and gesture-controlled personal sample chords, plus built-in instruments and One-shot sounds. Built-in behaviour and One-shot original-pitch triggering must remain unchanged.
+- Confirm no stuck notes, no visibly or audibly different note endings, and no red Chrome console errors.

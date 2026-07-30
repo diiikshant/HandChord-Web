@@ -1,13 +1,16 @@
 import type { InstrumentId } from '../instruments/instrumentTypes.ts'
 
 export type PersonalSoundMode = 'instrument' | 'one-shot'
+export type PersonalSoundSourceType = 'personal-sample' | 'recorded'
 
 export type PersonalSound = {
   id: string
   name: string
-  sourceType: 'personal-sample'
+  sourceType: PersonalSoundSourceType
   mode: PersonalSoundMode
   originalFileName: string
+  originalMimeType: string | null
+  recordingDurationSeconds: number | null
   rootMidiNote: number
   trimStartSeconds: number
   trimEndSeconds: number

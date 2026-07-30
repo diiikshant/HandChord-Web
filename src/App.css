@@ -574,6 +574,74 @@ button:disabled {
   margin-top: 20px;
 }
 
+.personal-sound-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.personal-sound-actions .primary-button,
+.personal-sound-actions .secondary-button {
+  min-width: auto;
+}
+
+.recording-countdown,
+.recording-live {
+  display: grid;
+  gap: 14px;
+  margin-top: 20px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--debug-background) 76%, #000);
+}
+
+.recording-countdown {
+  justify-items: center;
+  text-align: center;
+}
+
+.recording-countdown strong {
+  color: var(--accent);
+  font-size: 4rem;
+  line-height: 1;
+}
+
+.recording-live > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-heading);
+}
+
+.recording-live > div:first-child strong {
+  color: var(--error);
+}
+
+.input-meter {
+  display: grid;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.input-meter-track {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--surface-hover);
+}
+
+.input-meter-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--success);
+  transition: width 80ms linear;
+}
+
 .audio-controls {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

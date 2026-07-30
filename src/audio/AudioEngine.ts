@@ -19,6 +19,11 @@ export type AudioSnapshot = {
   error: string | null
 }
 
+export type InputLevelMeter = {
+  readLevel: () => number
+  dispose: () => void
+}
+
 type AudioContextConstructor = new () => AudioContext
 
 /** Keeps chord identity independent from browser audio nodes for predictable playback. */
@@ -126,6 +131,26 @@ export class AudioEngine {
   getActiveVoiceCount() { return (this.synth?.activeVoiceCount ?? 0) + (this.sampleInstrument?.activeVoiceCount ?? 0) }
   getActiveSoundSource() { return this.activeSoundSource }
   getSamplePlaybackRates() { return this.sampleInstrument?.playbackRates ?? [] }
+  getSampleVoiceGroupDiagnostics() { return this.sampleInstrument?.voiceGroupDiagnostics ?? { groupCount: 0, memberVoiceCount: 0, looping: false, sharedDurationSeconds: null, startTime: null, releaseStartTime: null, stopTime: null, naturalVoiceDurations: [] } }
+
+  /** Creates analysis-only nodes in the existing AudioContext; it never connects microphone audio to speakers. */
+  createInputLevelMeter(stream: MediaStream): InputLevelMeter {
+    if (!this.context) throw new Error('Enable Audio before starting the microphone meter.')
+    const source = this.context.createMediaStreamSource(stream)
+    const analyser = this.context.createAnalyser()
+    analyser.fftSize = 512
+    source.connect(analyser)
+    const samples = new Uint8Array(analyser.fftSize)
+    return {
+      readLevel: () => {
+        analyser.getByteTimeDomainData(samples)
+        let sum = 0
+        for (const sample of samples) { const normalised = (sample - 128) / 128; sum += normalised * normalised }
+        return Math.min(1, Math.sqrt(sum / samples.length) * 3)
+      },
+      dispose: () => { source.disconnect(); analyser.disconnect() },
+    }
+  }
 
   /** Releases active notes before new voices begin with the selected preset. */
   setInstrument(id: InstrumentId) {

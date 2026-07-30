@@ -4,7 +4,9 @@ import { isPersonalSoundRecord, normalisePersonalSoundRecord } from './personalS
 import {
   applyLoopEdgeFades,
   calculateNormalisationGain,
+  calculateNaturalVoiceDuration,
   clampLoopCrossfade,
+  createSampleChordTiming,
   createLoopSettings,
   createWaveformPeaks,
   nearestSampleOctave,
@@ -21,7 +23,7 @@ import {
 } from './sampleMath.ts'
 import { DEFAULT_LOOP_CROSSFADE_SECONDS, MAX_PERSONAL_SOUND_BYTES, type PersonalSound } from './soundTypes.ts'
 
-const sound: PersonalSound = { id: 'sample', name: 'Sample', sourceType: 'personal-sample', mode: 'instrument', originalFileName: 'sample.wav', rootMidiNote: 60, trimStartSeconds: 0, trimEndSeconds: 1, fadeInSeconds: 0.015, fadeOutSeconds: 0.015, normalisationGain: 1, reverse: false, loopEnabled: false, loopStartSeconds: 0, loopEndSeconds: 1, loopCrossfadeSeconds: DEFAULT_LOOP_CROSSFADE_SECONDS, createdAt: 1, modifiedAt: 1 }
+const sound: PersonalSound = { id: 'sample', name: 'Sample', sourceType: 'personal-sample', mode: 'instrument', originalFileName: 'sample.wav', originalMimeType: 'audio/wav', recordingDurationSeconds: null, rootMidiNote: 60, trimStartSeconds: 0, trimEndSeconds: 1, fadeInSeconds: 0.015, fadeOutSeconds: 0.015, normalisationGain: 1, reverse: false, loopEnabled: false, loopStartSeconds: 0, loopEndSeconds: 1, loopCrossfadeSeconds: DEFAULT_LOOP_CROSSFADE_SECONDS, createdAt: 1, modifiedAt: 1 }
 const buffer = { length: 8, numberOfChannels: 2, getChannelData: (channel: number) => channel === 0 ? Float32Array.from([0, 0.25, -0.5, 0.75, 0, 0.1, -0.2, 0]) : Float32Array.from([0, -0.1, 0.3, -0.4, 0, 0.1, 0, 0]) } as unknown as AudioBuffer
 
 test('validates supported local files, size, duration, and trim range', () => {
@@ -82,9 +84,48 @@ test('creates polyphonic instrument notes and preserves original one-shot pitch'
   assert.deepEqual(sampleVoiceNotes({ ...sound, mode: 'one-shot' }, [60, 64, 67]), [60])
 })
 
+test('calculates natural pitched durations and synchronises a sampled chord to its shortest voice', () => {
+  assert.equal(calculateNaturalVoiceDuration(2, 2), 1)
+  assert.equal(calculateNaturalVoiceDuration(2, 0.5), 4)
+  const timing = createSampleChordTiming(2, [0.5, 1, 2], 10.015, 0.015, 0.2)
+  assert.deepEqual(timing.naturalVoiceDurations, [4, 2, 1])
+  assert.equal(timing.sharedDurationSeconds, 1)
+  assert.equal(timing.startTime, 10.015)
+  assert.equal(timing.stopTime, 11.015)
+  assert.equal(timing.releaseStartTime, timing.stopTime - timing.releaseSeconds)
+  assert.ok(timing.releaseSeconds <= timing.sharedDurationSeconds * 0.45)
+})
+
+test('uses final clamped playback rates and safely clamps envelopes for very short samples', () => {
+  const clampedHighRate = samplePlaybackRate(96, 60)
+  const clampedLowRate = samplePlaybackRate(24, 60)
+  assert.equal(clampedHighRate, 2)
+  assert.equal(clampedLowRate, 0.5)
+  const timing = createSampleChordTiming(0.08, [clampedLowRate, clampedHighRate], 1, 0.1, 0.1)
+  assert.deepEqual(timing.naturalVoiceDurations, [0.16, 0.04])
+  assert.equal(timing.sharedDurationSeconds, 0.04)
+  assert.ok(timing.attackSeconds <= timing.sharedDurationSeconds * 0.35)
+  assert.ok(timing.releaseSeconds <= timing.sharedDurationSeconds * 0.45)
+  assert.ok(timing.releaseStartTime >= timing.startTime)
+})
+
+test('uses the actual trimmed duration for normal and reversed sample scheduling', () => {
+  const trimmed = { ...sound, trimStartSeconds: 0.2, trimEndSeconds: 0.8 }
+  const reversed = { ...trimmed, reverse: true }
+  const normalRegion = resolvePlaybackRegion(trimmed, 1)
+  const reversedRegion = resolvePlaybackRegion(reversed, 1)
+  assert.ok(Math.abs((normalRegion.endSeconds - normalRegion.startSeconds) - 0.6) < 0.000001)
+  assert.ok(Math.abs((reversedRegion.endSeconds - reversedRegion.startSeconds) - 0.6) < 0.000001)
+  assert.ok(Math.abs(createSampleChordTiming(normalRegion.endSeconds - normalRegion.startSeconds, [2], 1, 0.015, 0.015).sharedDurationSeconds - 0.3) < 0.000001)
+  assert.ok(Math.abs(createSampleChordTiming(reversedRegion.endSeconds - reversedRegion.startSeconds, [2], 1, 0.015, 0.015).sharedDurationSeconds - 0.3) < 0.000001)
+})
+
 test('safely rejects invalid IndexedDB records', () => {
   assert.equal(isPersonalSoundRecord({ id: 'broken' }), false)
   assert.equal(isPersonalSoundRecord({ ...sound, audioData: new ArrayBuffer(4) }), true)
+  const recorded = normalisePersonalSoundRecord({ ...sound, sourceType: 'recorded', originalMimeType: 'audio/webm;codecs=opus', recordingDurationSeconds: 1, audioData: new ArrayBuffer(4) })
+  assert.equal(recorded?.sourceType, 'recorded')
+  assert.equal(recorded?.recordingDurationSeconds, 1)
 })
 
 test('loads older loop records safely and preserves looping settings when copied', () => {
