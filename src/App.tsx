@@ -7,6 +7,7 @@ import { MovementDiagnostics } from './components/MovementDiagnostics'
 import { CalibrationView } from './components/CalibrationView'
 import { ReverbControl } from './components/ReverbControl'
 import { PerformanceVolumeControl } from './components/PerformanceVolumeControl'
+import { DistortionControl } from './components/DistortionControl'
 import { useCamera } from './hooks/useCamera'
 import { useFingerRecognition } from './hooks/useFingerRecognition'
 import { useHandTracking } from './hooks/useHandTracking'
@@ -15,6 +16,7 @@ import { useGestureAudio } from './hooks/useGestureAudio'
 import { useMovementTracking } from './hooks/useMovementTracking'
 import { useReverbControl } from './hooks/useReverbControl'
 import { usePerformanceVolumeControl } from './hooks/usePerformanceVolumeControl'
+import { useDistortionControl } from './hooks/useDistortionControl'
 import type { RootKey, ScaleName } from './music/MusicTheoryEngine'
 import type { CanvasDimensions } from './tracking/handTrackingTypes'
 import './App.css'
@@ -43,6 +45,7 @@ function App() {
   const movement = useMovementTracking(hands)
   const { engine, audio } = useAudioEngine()
   const reverb = useReverbControl(engine, movement)
+  const distortion = useDistortionControl(engine, movement)
   const performanceVolume = usePerformanceVolumeControl(engine, movement, manualMasterVolume)
   const {
     gestureAudio,
@@ -175,6 +178,7 @@ function App() {
         <MovementDiagnostics movement={movement} />
         <CalibrationView movement={movement} />
         <ReverbControl reverb={reverb} />
+        <DistortionControl distortion={distortion} />
         <PerformanceVolumeControl volume={performanceVolume} manualMasterVolume={manualMasterVolume} />
 
         <aside className="debug-panel" aria-label="Hand tracking diagnostics">

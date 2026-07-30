@@ -89,4 +89,13 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - The performance gain stage is built once after dry/reverb routing and before the manual master gain. Gain changes use smooth AudioParam automation and settle in roughly 150 ms; movement never recreates the graph.
 - Final internal output is performance gain × manual master gain. The manual master volume remains the user’s overall safety limit.
 - If rightVertical is uncalibrated or Performance Volume Control is off, the app safely uses 70% performance gain and shows the appropriate calibration or control status. Temporary right-hand loss preserves the last safe value and never stops a chord or disables reverb.
-- Volume movement never retriggers chords, changes finger recognition, or changes chord banks. Left horizontal and right horizontal remain disconnected from audio during this milestone.
+- Volume movement never retriggers chords, changes finger recognition, or changes chord banks. Right horizontal remains disconnected from audio during this milestone.
+
+## Left-hand horizontal distortion
+
+- Anatomical left-hand horizontal movement controls the internal distortion amount using the calibrated, mirrored user-visible coordinate. Visual-left is clean (0% wet); moving visually right increases the effect up to 70% wet. No second coordinate mirror is applied in the audio path.
+- The response is curved: `leftHorizontal² × 0.70`. This makes the midpoint about 17.5% wet and leaves most of the physical movement range useful for controlled drive rather than reaching harsh distortion too quickly.
+- The native audio graph is: polyphonic synth → parallel dry and WaveShaperNode distortion paths → reverb dry/wet routing → performance gain → manual master gain → DynamicsCompressorNode → browser audio destination. The distortion graph is built once inside the existing AudioContext, uses 2× oversampling, and is never recreated for tracking updates.
+- Distortion wet/dry gains use smooth AudioParam targets that settle in about 195 ms. A small compensation keeps the clean path at no less than 82.5% and limits the wet path to 80% of its requested mix before the compressor, reducing loudness surges and clipping risk.
+- Distortion Control requires leftHorizontal calibration. If it is missing or the control is off, the app uses a clean 0% distortion and keeps chords, reverb, and performance volume active. Temporary left-hand loss retains the last safe value and never stops or retriggers the chord.
+- Right-hand horizontal movement remains disconnected from audio in this milestone.

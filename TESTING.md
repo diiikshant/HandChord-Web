@@ -128,3 +128,13 @@
 - Briefly hide the right hand, then keep it hidden. Confirm volume keeps its last safe setting and the panel reports unavailable without stopping audio.
 - Turn Performance Volume Control off. Confirm it returns smoothly to 70% internal gain while reverb, chords, and tracking continue.
 - Adjust the Audio Test master slider. Confirm the panel’s effective output percentage changes as performance gain × manual master gain, and test speakers and headphones with no console errors.
+
+## Left-hand horizontal distortion
+
+- Calibrate leftHorizontal, enable audio, and turn on **Distortion Control**. At the calibrated visual-left position, confirm button-controlled and gesture-controlled chords stay clean.
+- Move the left hand to the midpoint, then the calibrated visual-right position. Confirm the panel rises from about 0% through about 18% to a maximum of 70% wet, with a usable moderate drive rather than immediate harshness.
+- Move slowly left to right and right to left, then move rapidly. Confirm distortion changes smoothly with no clicks, stuck notes, major loudness surge, or clipping.
+- Move the left hand diagonally while Reverb Control is active. Confirm vertical movement changes reverb and horizontal movement changes distortion independently, without changing the active chord unless the finger gesture changes.
+- Briefly hide the left hand, then keep it hidden longer than 500 ms. Confirm the last distortion amount stays safe, the panel reports unavailable, right-hand volume continues normally, and the chord continues.
+- Turn Distortion Control off while a chord is playing. Confirm it returns smoothly to clean 0% wet while reverb, performance volume, tracking, and the chord continue.
+- Refresh and confirm saved calibration remains available. Test speakers and headphones for clipping or loudness surges, and confirm the Chrome console has no red errors or microphone request.

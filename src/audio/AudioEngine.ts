@@ -1,4 +1,5 @@
 import { PolySynth } from './PolySynth.ts'
+import { DistortionEffect } from './DistortionEffect.ts'
 import { ReverbEffect } from './ReverbEffect.ts'
 
 export type AudioStatus = 'disabled' | 'starting' | 'ready' | 'suspended' | 'error'
@@ -39,7 +40,9 @@ export class AudioEngine {
   private masterGain: GainNode | null = null
   private performanceGain: GainNode | null = null
   private synth: PolySynth | null = null
+  private distortion: DistortionEffect | null = null
   private reverb: ReverbEffect | null = null
+  private distortionWet = 0
   private reverbWet = 0.1
   private status: AudioStatus = 'disabled'
   private error: string | null = null
@@ -109,6 +112,13 @@ export class AudioEngine {
   }
   getPerformanceGain() { return this.performanceVolume }
 
+  setDistortionWet(wet: number) {
+    this.distortionWet = Math.min(1, Math.max(0, wet))
+    this.distortion?.setWet(this.distortionWet)
+  }
+
+  getDistortionWet() { return this.distortionWet }
+
   setReverbWet(wet: number) {
     this.reverbWet = Math.min(1, Math.max(0, wet))
     this.reverb?.setWet(this.reverbWet)
@@ -156,6 +166,8 @@ export class AudioEngine {
     this.stop()
     this.synth?.dispose()
     this.synth = null
+    this.distortion?.dispose()
+    this.distortion = null
     this.reverb?.dispose()
     this.reverb = null
     this.performanceGain?.disconnect()
@@ -203,7 +215,9 @@ export class AudioEngine {
     this.performanceGain = performanceGain
     this.reverb = new ReverbEffect(context, performanceGain)
     this.reverb.setWet(this.reverbWet)
-    this.synth = new PolySynth(context, this.reverb.input)
+    this.distortion = new DistortionEffect(context, this.reverb.input)
+    this.distortion.setWet(this.distortionWet)
+    this.synth = new PolySynth(context, this.distortion.input)
     context.onstatechange = () => this.updateStatusFromContext()
   }
 
