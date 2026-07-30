@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { HandOverlay } from './components/HandOverlay'
 import { AudioTest } from './components/AudioTest'
 import { FingerRecognitionPanel } from './components/FingerRecognitionPanel'
@@ -6,6 +6,9 @@ import { GestureDiagnostics } from './components/GestureDiagnostics'
 import { useCamera } from './hooks/useCamera'
 import { useFingerRecognition } from './hooks/useFingerRecognition'
 import { useHandTracking } from './hooks/useHandTracking'
+import { useAudioEngine } from './hooks/useAudioEngine'
+import { useGestureAudio } from './hooks/useGestureAudio'
+import type { RootKey, ScaleName } from './music/MusicTheoryEngine'
 import type { CanvasDimensions } from './tracking/handTrackingTypes'
 import './App.css'
 
@@ -20,6 +23,8 @@ const cameraMessages = {
 
 function App() {
   const videoRef = useRef<HTMLVideoElement>(null)
+  const [root, setRoot] = useState<RootKey>('C')
+  const [scale, setScale] = useState<ScaleName>('major')
   const { startCamera, status: cameraStatus, stopCamera, stream } = useCamera(videoRef)
   const { hands, inferenceFps, modelStatus, trackingStatus, videoDimensions } = useHandTracking(
     videoRef,
@@ -27,6 +32,12 @@ function App() {
     cameraStatus === 'active',
   )
   const recognitions = useFingerRecognition(hands)
+  const { engine, audio } = useAudioEngine()
+  const {
+    gestureAudio,
+    setGestureAudioEnabled,
+    releaseGestureAudioOwnership,
+  } = useGestureAudio({ engine, recognitions, liveHandCount: hands.length, root, scale })
   const [canvasDimensions, setCanvasDimensions] = useState<CanvasDimensions>({
     width: 0,
     height: 0,
@@ -44,6 +55,17 @@ function App() {
         : dimensions,
     )
   }, [])
+
+  useEffect(() => {
+    const releaseAudioWhenHidden = () => {
+      if (document.hidden) {
+        engine.stop()
+        releaseGestureAudioOwnership()
+      }
+    }
+    document.addEventListener('visibilitychange', releaseAudioWhenHidden)
+    return () => document.removeEventListener('visibilitychange', releaseAudioWhenHidden)
+  }, [engine, releaseGestureAudioOwnership])
 
   return (
     <main className="app-shell">
@@ -110,6 +132,35 @@ function App() {
           )}
         </div>
 
+        <section className="gesture-audio-panel" aria-labelledby="gesture-audio-title">
+          <div className="gesture-audio-heading">
+            <div>
+              <p className="eyebrow">Live camera control</p>
+              <h2 id="gesture-audio-title">Gesture Audio</h2>
+            </div>
+            <label className="gesture-audio-toggle">
+              <input
+                type="checkbox"
+                checked={gestureAudio.enabled}
+                onChange={(event) => setGestureAudioEnabled(event.target.checked)}
+              />
+              Enable Gesture Audio
+            </label>
+          </div>
+          <p className="gesture-audio-message" aria-live="polite">
+            {gestureAudio.enabled ? (gestureAudio.reason ?? 'Waiting for a stable two-hand chord selection.') : 'Gesture Audio is off. Camera tracking remains active.'}
+          </p>
+          <dl className="gesture-audio-readout">
+            <div><dt>Gesture state</dt><dd>{gestureAudio.state === 'hold' ? 'Hold…' : gestureAudio.state.replaceAll('-', ' ')}</dd></div>
+            <div><dt>Left stable gesture</dt><dd>{gestureAudio.leftGesture ?? 'Waiting'}</dd></div>
+            <div><dt>Right stable gesture</dt><dd>{gestureAudio.rightGesture ?? 'Waiting'}</dd></div>
+            <div><dt>Current chord bank</dt><dd>{gestureAudio.bank ?? 'Waiting'}</dd></div>
+            <div><dt>Current chord function</dt><dd>{gestureAudio.chord?.function ?? 'None'}</dd></div>
+            <div><dt>Current chord name</dt><dd>{gestureAudio.chord?.name ?? 'None'}</dd></div>
+            <div><dt>Current notes</dt><dd>{gestureAudio.chord?.noteNames.join(', ') ?? 'None'}</dd></div>
+          </dl>
+        </section>
+
         <aside className="debug-panel" aria-label="Hand tracking diagnostics">
           <div className="debug-heading">
             <span>Tracking diagnostics</span>
@@ -147,7 +198,15 @@ function App() {
           <GestureDiagnostics recognitions={recognitions} />
         </aside>
 
-        <AudioTest />
+        <AudioTest
+          engine={engine}
+          audio={audio}
+          root={root}
+          scale={scale}
+          onRootChange={setRoot}
+          onScaleChange={setScale}
+          onManualAudioAction={releaseGestureAudioOwnership}
+        />
       </section>
     </main>
   )

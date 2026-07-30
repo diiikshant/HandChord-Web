@@ -1,12 +1,15 @@
-import { useEffect, useRef, useState } from 'react'
-import { AudioEngine, type AudioSnapshot } from '../audio/AudioEngine.ts'
+import { useState } from 'react'
+import type { AudioEngine, AudioSnapshot } from '../audio/AudioEngine.ts'
 import { CHROMATIC_NOTES, generateDiatonicTriad, type DiatonicChord, type RootKey, type ScaleName } from '../music/MusicTheoryEngine.ts'
 
-const INITIAL_AUDIO: AudioSnapshot = {
-  status: 'disabled',
-  contextState: 'not-created',
-  activeChordId: null,
-  error: null,
+type AudioTestProps = {
+  engine: AudioEngine
+  audio: AudioSnapshot
+  root: RootKey
+  scale: ScaleName
+  onRootChange: (root: RootKey) => void
+  onScaleChange: (scale: ScaleName) => void
+  onManualAudioAction: () => void
 }
 
 const STATUS_COPY = {
@@ -17,42 +20,37 @@ const STATUS_COPY = {
   error: 'Audio could not start. Check the message below and try again.',
 }
 
-function AudioTest() {
-  const engineRef = useRef<AudioEngine | null>(null)
-  const unsubscribeRef = useRef<(() => void) | null>(null)
-  const [audio, setAudio] = useState<AudioSnapshot>(INITIAL_AUDIO)
-  const [root, setRoot] = useState<RootKey>('C')
-  const [scale, setScale] = useState<ScaleName>('major')
+function AudioTest({
+  engine,
+  audio,
+  root,
+  scale,
+  onRootChange,
+  onScaleChange,
+  onManualAudioAction,
+}: AudioTestProps) {
   const [volume, setVolume] = useState(0.3)
   const [currentChord, setCurrentChord] = useState<DiatonicChord | null>(null)
 
-  const getEngine = () => {
-    if (!engineRef.current) {
-      const engine = new AudioEngine()
-      unsubscribeRef.current = engine.subscribe(setAudio)
-      engineRef.current = engine
-    }
-    return engineRef.current
-  }
-
   const stopForConfigurationChange = () => {
-    engineRef.current?.stop()
+    engine.stop()
+    onManualAudioAction()
     setCurrentChord(null)
   }
 
   const setKey = (key: RootKey) => {
     stopForConfigurationChange()
-    setRoot(key)
+    onRootChange(key)
   }
 
   const setSelectedScale = (nextScale: ScaleName) => {
     stopForConfigurationChange()
-    setScale(nextScale)
+    onScaleChange(nextScale)
   }
 
   const enableAudio = async () => {
     try {
-      await getEngine().enable()
+      await engine.enable()
     } catch {
       // AudioEngine publishes a beginner-friendly error message for the panel.
     }
@@ -60,7 +58,7 @@ function AudioTest() {
 
   const resumeAudio = async () => {
     try {
-      await getEngine().resume()
+      await engine.resume()
     } catch {
       // AudioEngine publishes a beginner-friendly error message for the panel.
     }
@@ -68,8 +66,9 @@ function AudioTest() {
 
   const playChord = (degree: number) => {
     const chord = generateDiatonicTriad(root, scale, degree)
+    onManualAudioAction()
     try {
-      const played = getEngine().playChord(`${root}-${scale}-${degree}`, chord.midiNotes)
+      const played = engine.playChord(`button-${root}-${scale}-${degree}`, chord.midiNotes)
       if (played) {
         setCurrentChord(chord)
       }
@@ -79,13 +78,15 @@ function AudioTest() {
   }
 
   const stopChord = () => {
-    engineRef.current?.stop()
+    engine.stop()
+    onManualAudioAction()
     setCurrentChord(null)
   }
 
   const playTestTone = () => {
+    onManualAudioAction()
     try {
-      getEngine().playTestTone()
+      engine.playTestTone()
       setCurrentChord(null)
     } catch {
       // AudioEngine changes its state and error message rather than failing silently.
@@ -94,24 +95,8 @@ function AudioTest() {
 
   const changeVolume = (nextVolume: number) => {
     setVolume(nextVolume)
-    engineRef.current?.setMasterVolume(nextVolume)
+    engine.setMasterVolume(nextVolume)
   }
-
-  useEffect(() => {
-    const releaseOnHiddenPage = () => {
-      if (document.hidden) {
-        engineRef.current?.stop()
-        setCurrentChord(null)
-      }
-    }
-    document.addEventListener('visibilitychange', releaseOnHiddenPage)
-    return () => {
-      document.removeEventListener('visibilitychange', releaseOnHiddenPage)
-      unsubscribeRef.current?.()
-      engineRef.current?.dispose()
-      engineRef.current = null
-    }
-  }, [])
 
   const chordButtons = [1, 2, 3, 4, 5, 6].map((degree) => generateDiatonicTriad(root, scale, degree))
   const canPlay = audio.status === 'ready'
@@ -122,7 +107,7 @@ function AudioTest() {
         <div>
           <p className="eyebrow">Standalone sound check</p>
           <h2 id="audio-test-title">Audio Test</h2>
-          <p>These buttons are separate from hand gestures for now.</p>
+          <p>These buttons remain available alongside Gesture Audio for debugging.</p>
         </div>
         <span className={`audio-status audio-${audio.status}`}>Audio: {audio.status}</span>
       </div>

@@ -40,7 +40,7 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - Hand identity uses MediaPipe anatomical handedness. Low handedness confidence is shown as unresolved rather than guessed, and screen crossing does not swap left/right roles.
 - A valid gesture must remain present for 200–300 ms before becoming stable. A stable gesture remains visible through up to 500 ms of unclear or temporarily missing frames.
 - A valid new pose that is still confirming is shown as **Hold…**. Low confidence, missing joints, unresolved handedness, and unsupported patterns show their specific rejection reason.
-- Finger recognition remains separate from audio, chord mapping, effects, and all composition features.
+- Finger recognition remains separate from the audio engine and movement effects. This milestone adds a dedicated controller bridge that consumes only already-stable canonical gestures; raw counts and per-frame landmarks never trigger audio directly.
 
 ## Standalone chord-audio test
 
@@ -50,4 +50,14 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - The built-in synth is a warm polyphonic browser instrument: a triangle oscillator plus a quieter, slightly detuned sine oscillator for every note. It supports at least six simultaneous notes.
 - Selecting a chord sustains it. Selecting another chord releases the old chord smoothly before starting the new one. Selecting the same chord again does not stack duplicate notes. **Stop**, key/scale changes, page backgrounding, and leaving the Audio Test release active notes safely.
 - Audio runs through polyphonic voice gain envelopes, a conservative master gain, a DynamicsCompressorNode, and then the browser audio destination. Oscillators never connect directly to speakers without a gain envelope, and released nodes are stopped and disconnected.
-- The Audio Test remains separate from gesture control during this milestone. No hand state, gesture, movement, or camera event triggers sound yet.
+- The Audio Test remains available for button-only debugging alongside gesture control. Its buttons share the single AudioContext but can be used independently of the camera.
+
+## Stable two-hand gesture chord control
+
+- The anatomical left hand selects chord position: stable one, two, three, four, and open palm select positions 1 through 5. The anatomical right hand selects the bank: stable open palm selects the primary bank and stable index-only selects the secondary bank. Other right-hand gestures are unsupported for chord selection.
+- In Major mode, primary positions 1–5 map to I, ii, iii, IV, and V. Secondary positions 1–5 map to vi, vii diminished, ♭VII major, iv minor, and the secondary dominant V/vi. The music engine generates each chord from the selected root and scale rather than React storing note arrays.
+- In Natural Minor mode, the primary bank maps to i, ii diminished, III, iv, and v. The secondary bank uses musically valid equivalents: VI, VII, ♭VII, iv, and V/VI. The same algorithmic music engine generates their notes.
+- Each individual finger gesture must first become stable through finger recognition. A complete left/right combination then remains unchanged for 100 ms before it changes a chord, avoiding an unnecessary second long delay. The confirmed combination latches: it does not retrigger the same chord every tracking frame.
+- Both anatomical hands showing stable fists for 500 ms stops the current gesture-controlled chord. One fist alone does not stop playback. If both hands are missing for 850 ms, the gesture-controlled chord begins its safe smooth release. Brief unclear tracking retains the last stable role for 650 ms and the current chord for up to 900 ms.
+- The live camera panel has a Gesture Audio toggle. Turning it off releases a gesture-controlled chord cleanly but leaves camera tracking and the button-based Audio Test working.
+- Gesture control remains separate from movement-controlled effects, calibration, sampling, looping, recording, and composition features.

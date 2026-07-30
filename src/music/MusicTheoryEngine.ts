@@ -4,14 +4,17 @@ export type RootKey = (typeof CHROMATIC_NOTES)[number]
 export type ScaleName = 'major' | 'natural-minor'
 export type ChordQuality = 'major' | 'minor' | 'diminished'
 
-export type DiatonicChord = {
-  degree: number
+export type GeneratedChord = {
   function: string
   root: RootKey
   quality: ChordQuality
   name: string
   midiNotes: number[]
   noteNames: string[]
+}
+
+export type DiatonicChord = GeneratedChord & {
+  degree: number
 }
 
 const SCALE_INTERVALS: Record<ScaleName, number[]> = {
@@ -50,6 +53,27 @@ function qualityFromIntervals(root: number, third: number, fifth: number): Chord
   }
 
   throw new Error('The selected scale degree does not form a supported triad.')
+}
+
+function createTriad(rootMidi: number, quality: ChordQuality, functionLabel: string): GeneratedChord {
+  const intervals: Record<ChordQuality, [number, number]> = {
+    major: [4, 7],
+    minor: [3, 7],
+    diminished: [3, 6],
+  }
+  const [thirdInterval, fifthInterval] = intervals[quality]
+  const midiNotes = [rootMidi, rootMidi + thirdInterval, rootMidi + fifthInterval]
+  const chordRoot = midiToNoteName(rootMidi)
+  const suffix = quality === 'major' ? 'major' : quality === 'minor' ? 'minor' : 'diminished'
+
+  return {
+    function: functionLabel,
+    root: chordRoot,
+    quality,
+    name: `${chordRoot} ${suffix}`,
+    midiNotes,
+    noteNames: midiNotes.map(noteNameWithOctave),
+  }
 }
 
 export function getScaleIntervals(scale: ScaleName) {
@@ -91,19 +115,41 @@ export function generateDiatonicTriad(root: RootKey, scale: ScaleName, degree: n
     return intervals[index % intervals.length] + octave * 12
   })
   const [rootOffset, thirdOffset, fifthOffset] = chromaticOffsets
-  const chordRoot = noteAtChromaticIndex(rootIndex + rootOffset)
   const quality = qualityFromIntervals(rootOffset, thirdOffset, fifthOffset)
   const rootMidi = ROOT_MIDI_C4 + rootIndex + rootOffset
-  const midiNotes = [rootMidi, ROOT_MIDI_C4 + rootIndex + thirdOffset, ROOT_MIDI_C4 + rootIndex + fifthOffset]
-  const suffix = quality === 'major' ? 'major' : quality === 'minor' ? 'minor' : 'diminished'
+  const chord = createTriad(
+    rootMidi,
+    quality,
+    (scale === 'major' ? MAJOR_ROMAN_NUMERALS : NATURAL_MINOR_ROMAN_NUMERALS)[degreeIndex],
+  )
 
   return {
+    ...chord,
     degree,
-    function: (scale === 'major' ? MAJOR_ROMAN_NUMERALS : NATURAL_MINOR_ROMAN_NUMERALS)[degreeIndex],
-    root: chordRoot,
-    quality,
-    name: `${chordRoot} ${suffix}`,
-    midiNotes,
-    noteNames: midiNotes.map(noteNameWithOctave),
   }
+}
+
+/** Generates a borrowed chord from a root-relative chromatic offset. */
+export function generateChromaticTriad(
+  root: RootKey,
+  semitoneOffset: number,
+  quality: ChordQuality,
+  functionLabel: string,
+): GeneratedChord {
+  if (!Number.isInteger(semitoneOffset)) {
+    throw new Error('Chromatic chord offsets must be whole semitones.')
+  }
+
+  return createTriad(ROOT_MIDI_C4 + getNoteIndex(root) + semitoneOffset, quality, functionLabel)
+}
+
+/** Builds a major dominant chord that leads to a selected diatonic degree. */
+export function generateSecondaryDominant(
+  root: RootKey,
+  scale: ScaleName,
+  targetDegree: number,
+): GeneratedChord {
+  const target = generateDiatonicTriad(root, scale, targetDegree)
+  const targetFunction = target.function.replace('°', '')
+  return createTriad(target.midiNotes[0] - 5, 'major', `V/${targetFunction}`)
 }

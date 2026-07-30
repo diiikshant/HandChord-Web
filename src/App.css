@@ -283,6 +283,69 @@ button:disabled {
   margin-top: 16px;
 }
 
+.gesture-audio-panel {
+  margin-top: 32px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--debug-background) 82%, #000);
+}
+
+.gesture-audio-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.gesture-audio-heading h2 {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 1.5rem;
+}
+
+.gesture-audio-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-heading);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.gesture-audio-toggle input {
+  width: 18px;
+  height: 18px;
+}
+
+.gesture-audio-message {
+  min-height: 1.4em;
+  margin: 14px 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.gesture-audio-readout {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0 0;
+}
+
+.gesture-audio-readout dt {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
+.gesture-audio-readout dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--text-heading);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  text-transform: capitalize;
+}
+
 .audio-test {
   margin-top: 32px;
   padding-top: 32px;
@@ -442,7 +505,8 @@ button:disabled {
   .finger-state-grid,
   .recognition-summary,
   .audio-controls,
-  .audio-readout {
+  .audio-readout,
+  .gesture-audio-readout {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -452,6 +516,14 @@ button:disabled {
 
   .audio-status {
     display: inline-block;
+    margin-top: 16px;
+  }
+
+  .gesture-audio-heading {
+    display: block;
+  }
+
+  .gesture-audio-toggle {
     margin-top: 16px;
   }
 }

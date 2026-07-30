@@ -76,3 +76,18 @@
 - Switch to another browser tab while a chord is playing. Confirm it releases safely. Return and use **Resume Audio** if Chrome shows the audio state as suspended.
 - Refresh after using audio. Confirm a new explicit **Enable Audio** action is required.
 - Test through desktop speakers and headphones. Confirm no clicking, clipping, red console errors, or unexpected audio output.
+
+## Stable two-hand gesture chord control
+
+- Enable Audio first, then enable the **Gesture Audio** toggle in the live camera panel.
+- Hold right open palm with left one, two, three, four, and open palm. After finger recognition becomes stable plus about 100 ms, confirm the primary-bank chords I, ii, iii, IV, and V play in the selected Major key.
+- Hold right index-only with left one, two, three, four, and open palm. Confirm the secondary-bank chords vi, vii diminished, ♭VII major, iv minor, and V/vi play in Major mode.
+- Switch to Natural Minor and repeat both banks. Confirm the panel displays i, ii°, III, iv, v in the primary bank and VI, VII, ♭VII, iv, V/VI in the secondary bank.
+- Hold the same valid two-hand combination. Confirm it does not repeatedly restart or grow louder.
+- Change only one hand, then hold the new complete combination for about 100 ms after the new finger gesture is stable. Confirm the new chord transitions smoothly.
+- Make both stable fists and hold for 500 ms. Confirm the panel shows **stopped** and the chord releases. Confirm one fist alone does not stop a chord.
+- Briefly hide one hand or allow one unclear frame. Confirm the current chord remains while the panel says tracking is temporarily lost. Hide both hands for about one second and confirm the chord begins its smooth release.
+- Use an unsupported right-hand gesture such as two fingers. Confirm the panel says **unsupported** and does not play a random chord.
+- Cross the hands in the camera view. Confirm anatomical left still chooses the position and anatomical right still chooses the bank.
+- Turn Gesture Audio off while it is playing. Confirm its chord releases, camera tracking continues, and the Audio Test buttons still play their chords.
+- Confirm there are no stuck notes, clicks, clipping, microphone requests, or red Chrome console errors.
