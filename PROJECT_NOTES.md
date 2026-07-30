@@ -1,7 +1,7 @@
 # Project Notes
 
-- Current milestone: MediaPipe hand landmark tracking
-- Working: Desktop webcam preview is confirmed in Chrome. The webcam lifecycle repair, MediaPipe integration, deterministic tests, and the production build pass; physical Chrome lifecycle and tracking verification is still pending.
+- Current milestone: Finger-state recognition and stable counts
+- Working: Camera lifecycle and MediaPipe hand tracking are confirmed in Chrome. Finger classification, gesture stabilisation, diagnostics, deterministic tests, and the production build pass; physical Chrome finger-recognition validation is still pending.
 - Exact root cause: React StrictMode's development effect rehearsal ran the old `useCamera` cleanup, which set `isMountedRef` to `false`. The effect setup did not restore it. When `getUserMedia()` later resolved, the hook treated the valid stream as obsolete and immediately called `track.stop()`, turning off the camera LED before a preview appeared.
 - Final camera ownership model: `useCamera` exclusively owns camera requests, the stable `CameraLifecycle` ref, stream cleanup, `video.srcObject`, metadata waiting, and `video.play()`. MediaPipe receives the active stream only for reading and never owns or stops it.
 - Stream lifecycle rules: only a user Stop Camera action, a genuine camera-component unmount, an intentionally replaced stream, or a failed startup can stop tracks. Each request has a generation ID, so an obsolete request cannot stop or change the state of a newer stream.
@@ -13,9 +13,16 @@
 - Files and hooks added: `src/tracking/handLandmarker.ts`, `src/tracking/handTrackingTypes.ts`, `src/tracking/overlayGeometry.ts`, `src/tracking/overlayGeometry.test.ts`, `src/hooks/useHandTracking.ts`, and `src/components/HandOverlay.tsx`.
 - Maximum detected hands: 2.
 - Initial inference-frame limit: approximately 18 frames per second, with unchanged video frames skipped and only one synchronous inference allowed at a time.
+- Finger-classification approach: long fingers use MCP/PIP/DIP/tip bend angles, palm-centre distance, and local palm-axis direction. The thumb uses CMC/MCP/IP/tip geometry, palm and index-MCP distance, and outward separation on the local index-to-little axis. Low-visibility required landmarks return `unclear`.
+- Finger-diagnostics repair: MediaPipe Hand Landmarker documents x/y/z landmark values and can surface an unreported per-landmark visibility as `0`. The classifier had treated that default as low confidence, rejecting every hand before geometry ran. Zero/absent visibility is now treated as unreported; explicit positive low values still produce `unclear`.
+- Open-palm thumb repair: a diagonal, naturally bent open thumb could satisfy one strict folded threshold and make an open palm report four. Thumb classification now requires several agreeing local-geometry signals before it marks a thumb folded, while an extended thumb needs several signals of separation, reach, and joint extension.
+- Fist thumb repair: physical Chrome testing showed a closed fist with all four long fingers correctly folded but its thumb left `unclear`. A compact thumb resting across curled fingers is now recognised as folded when its local palm reach, index-MCP distance, and non-outward direction agree; this remains separate from the open-palm rule.
+- Files added: `src/gestures/fingerState.ts`, `src/gestures/fingerClassifier.ts`, `src/gestures/gestureValidator.ts`, `src/gestures/gestureStabiliser.ts`, `src/gestures/gestureFixtures.ts`, `src/gestures/fingerClassifier.test.ts`, `src/gestures/gestureStabiliser.test.ts`, `src/hooks/useFingerRecognition.ts`, `src/components/FingerRecognitionPanel.tsx`, and `src/components/GestureDiagnostics.tsx`.
+- Confirmation timings: open palm 200 ms; fist 300 ms; one through four 250 ms.
+- Stable-state retention: a prior stable gesture survives unclear or temporarily missing hand results for 500 ms.
 - Overlay approach: an absolutely positioned canvas shares the camera stage with the `object-fit: contain` video. Contain sizing, letterboxing, canvas pixel ratio, and one horizontal mirror conversion are applied consistently so the skeleton follows the selfie preview.
 - Supported camera states: camera not started, permission requested, camera active, permission denied, camera unavailable, and camera error.
 - Supported tracking states: idle, waiting for video, no hands, one hand, two hands, and tracking error.
-- Known browser and performance limitations: tracking runs on the main browser thread for this milestone; lower-powered devices may run below the target rate. A camera must be available and permitted; deployed camera and model access require HTTPS (or `localhost` in development). The browser may choose a different camera despite the front-camera preference.
-- Physical Chrome testing: Still pending for the repaired camera lifecycle, landmark overlay alignment, and two-hand tracking.
-- Next recommended task: Confirm in desktop Chrome that the camera LED stays on, the preview appears, and model changes never stop the stream before continuing gesture work.
+- Known browser and performance limitations: tracking and recognition run on the main browser thread for this milestone; lower-powered devices may run below the target rate. Natural hand shape, occlusion, extreme rotation, and weak landmark confidence can return `unclear`. A camera must be available and permitted; deployed camera and model access require HTTPS (or `localhost` in development).
+- Physical Chrome testing: Still pending for fist through open-palm recognition, anatomical left/right identity, stabilised counts, and the repaired open-palm and fist thumb behaviours.
+- Next recommended task: Validate all six Gesture Diagnostics poses in desktop Chrome before adding any chord mapping.

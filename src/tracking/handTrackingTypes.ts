@@ -12,6 +12,7 @@ export type HandLandmark = {
   x: number
   y: number
   z: number
+  visibility?: number
 }
 
 export type TrackedHand = {

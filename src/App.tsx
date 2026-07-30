@@ -1,6 +1,9 @@
 import { useCallback, useRef, useState } from 'react'
 import { HandOverlay } from './components/HandOverlay'
+import { FingerRecognitionPanel } from './components/FingerRecognitionPanel'
+import { GestureDiagnostics } from './components/GestureDiagnostics'
 import { useCamera } from './hooks/useCamera'
+import { useFingerRecognition } from './hooks/useFingerRecognition'
 import { useHandTracking } from './hooks/useHandTracking'
 import type { CanvasDimensions } from './tracking/handTrackingTypes'
 import './App.css'
@@ -22,6 +25,7 @@ function App() {
     stream,
     cameraStatus === 'active',
   )
+  const recognitions = useFingerRecognition(hands)
   const [canvasDimensions, setCanvasDimensions] = useState<CanvasDimensions>({
     width: 0,
     height: 0,
@@ -138,6 +142,8 @@ function App() {
               </div>
             ))}
           </dl>
+          <FingerRecognitionPanel recognitions={recognitions} />
+          <GestureDiagnostics recognitions={recognitions} />
         </aside>
       </section>
     </main>

@@ -16,7 +16,13 @@ function toTrackedHands(result: ReturnType<HandLandmarker['detectForVideo']>): T
     const category = result.handedness[index]?.[0]
 
     return {
-      landmarks: landmarks.map(({ x, y, z }) => ({ x, y, z })),
+      landmarks: landmarks.map(({ x, y, z, visibility }) => ({
+        x,
+        y,
+        z,
+        // Hand Landmarker documents x/y/z; a zero visibility value means it was not reported.
+        ...(visibility > 0 ? { visibility } : {}),
+      })),
       handedness: category?.categoryName || 'Unknown',
       confidence: category?.score || 0,
     }

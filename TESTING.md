@@ -8,6 +8,22 @@
 - Camera permission is not requested when the page loads.
 - **Start Camera** requests video permission only.
 - Microphone permission is never requested.
+
+## Finger-state recognition
+
+- Test a fist and confirm raw count 0 and stable gesture **fist**.
+- Test a closed fist whose thumb rests across the curled fingers. The thumb should be **folded**, not **unclear**, and the stable result should be **fist** after its confirmation time.
+- Test index only, index + middle, index + middle + ring, four long fingers with folded thumb, and open palm for counts 1 through 5.
+- Confirm the four-finger pose does not count the folded thumb, while an open palm counts all five fingers.
+- For an open palm, spread the thumb comfortably to the side even if it is slightly bent; it should still report raw count 5 and **open palm**, not four.
+- Test both anatomical left and anatomical right hands; identity should remain based on handedness even if hands cross on screen.
+- Test slight hand rotation and natural hand movement; states should remain useful rather than depending on screen Y position alone.
+- Cover a fingertip or lower its landmark confidence where possible; the relevant finger should become **unclear** with a specific reason rather than guessed.
+- Confirm normal Chrome tracking does not report every finger as **unclear** because of an unreported zero visibility value.
+- Show thumb + index and confirm raw count 2 with **unsupported finger pattern**, not fist or canonical two.
+- Briefly move a hand out of frame and back. The previous stable gesture should remain for about 500 ms, then become **hand temporarily missing** if it stays absent.
+- Open **Gesture Diagnostics** and complete fist, one, two, three, four, and open palm. Each expected pose must remain stable for one second before passing.
+- Verify in desktop Chrome with no console errors.
 - The active webcam preview is mirrored horizontally.
 - **Stop Camera** stops the webcam indicator and returns to the not-started state.
 - Denying permission shows the permission-denied state and **Try Again** is available.

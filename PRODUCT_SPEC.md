@@ -30,4 +30,14 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - The camera video and landmark canvas overlay must remain aligned for the same visible `contain` area, including letterboxing, browser resizing, and device pixel ratio.
 - The video preview and overlay are mirrored exactly once so the skeleton follows the mirrored selfie view.
 - Tracking processes at most one current frame at a time and skips unchanged frames so stale camera frames do not accumulate.
-- Finger counting, gesture recognition, chord mapping, and audio are outside this milestone.
+
+## Finger-state recognition
+
+- Each detected hand classifies thumb, index, middle, ring, and little fingers as `extended`, `folded`, or `unclear`.
+- Supported canonical gestures are fist (0), one (index), two (index + middle), three (index + middle + ring), four (four long fingers with folded thumb), and open palm (5).
+- Raw extended-finger count and canonical gesture remain separate. For example, thumb + index has raw count 2 but is an unsupported canonical pattern, never a fist.
+- Finger states use hand-local geometry. Long fingers use joints, palm distance, and palm direction; the thumb uses separate CMC/MCP/tip geometry, outward separation, and multiple agreeing signals so a naturally diagonal open thumb is not mistaken for folded.
+- Hand identity uses MediaPipe anatomical handedness. Low handedness confidence is shown as unresolved rather than guessed, and screen crossing does not swap left/right roles.
+- A valid gesture must remain present for 200–300 ms before becoming stable. A stable gesture remains visible through up to 500 ms of unclear or temporarily missing frames.
+- A valid new pose that is still confirming is shown as **Hold…**. Low confidence, missing joints, unresolved handedness, and unsupported patterns show their specific rejection reason.
+- Finger recognition remains separate from audio, chord mapping, effects, and all composition features.

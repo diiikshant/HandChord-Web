@@ -211,6 +211,78 @@ button:disabled {
   font-size: 0.85rem;
 }
 
+.finger-recognition-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.finger-recognition-card,
+.gesture-diagnostics-content {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--debug-background) 76%, #000);
+}
+
+.finger-recognition-card h3,
+.gesture-diagnostics-content h3 {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 1rem;
+  text-transform: capitalize;
+}
+
+.recognition-confidence,
+.recognition-empty,
+.gesture-diagnostics-content p {
+  margin: 8px 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.finger-state-grid,
+.recognition-summary {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 10px;
+  margin: 16px 0 0;
+}
+
+.recognition-summary {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.finger-state-grid dt,
+.recognition-summary dt {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  text-transform: capitalize;
+}
+
+.finger-state-grid dd,
+.recognition-summary dd {
+  margin: 4px 0 0;
+  color: var(--text-heading);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.gesture-diagnostics {
+  margin-top: 20px;
+}
+
+.gesture-diagnostics-content {
+  margin-top: 12px;
+}
+
+.gesture-diagnostic-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+}
+
 @media (max-width: 720px) {
   .app-shell {
     padding: 24px;
@@ -230,6 +302,11 @@ button:disabled {
   }
 
   .debug-panel dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .finger-state-grid,
+  .recognition-summary {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
