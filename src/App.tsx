@@ -9,6 +9,7 @@ import { ReverbControl } from './components/ReverbControl'
 import { DistortionControl } from './components/DistortionControl'
 import { ChorusControl } from './components/ChorusControl'
 import { TapeDelayControl } from './components/TapeDelayControl'
+import { InstrumentSelector } from './components/InstrumentSelector'
 import { useCamera } from './hooks/useCamera'
 import { useFingerRecognition } from './hooks/useFingerRecognition'
 import { useHandTracking } from './hooks/useHandTracking'
@@ -19,6 +20,8 @@ import { useReverbControl } from './hooks/useReverbControl'
 import { useDistortionControl } from './hooks/useDistortionControl'
 import { useChorusControl } from './hooks/useChorusControl'
 import { useTapeDelayControl } from './hooks/useTapeDelayControl'
+import { useInstrumentSelection } from './hooks/useInstrumentSelection'
+import type { InstrumentId } from './audio/instruments/instrumentTypes'
 import type { RootKey, ScaleName } from './music/MusicTheoryEngine'
 import type { CanvasDimensions } from './tracking/handTrackingTypes'
 import './App.css'
@@ -50,6 +53,7 @@ function App() {
   const distortion = useDistortionControl(engine, movement)
   const chorus = useChorusControl(engine, movement)
   const tapeDelay = useTapeDelayControl(engine, movement)
+  const { instrument, selectInstrument: selectStoredInstrument } = useInstrumentSelection(engine)
   const {
     gestureAudio,
     setGestureAudioEnabled,
@@ -62,6 +66,13 @@ function App() {
   })
   const canTryAgain =
     cameraStatus === 'denied' || cameraStatus === 'unavailable' || cameraStatus === 'error'
+
+  const selectInstrument = useCallback((id: InstrumentId) => {
+    if (id === instrument.id) return
+    // A new preset should begin with fresh voices rather than leaving the old chord running.
+    releaseGestureAudioOwnership()
+    selectStoredInstrument(id)
+  }, [instrument.id, releaseGestureAudioOwnership, selectStoredInstrument])
 
   const updateCanvasDimensions = useCallback((dimensions: CanvasDimensions) => {
     setCanvasDimensions((current) =>
@@ -184,6 +195,7 @@ function App() {
         <DistortionControl distortion={distortion} />
         <ChorusControl chorus={chorus} />
         <TapeDelayControl tapeDelay={tapeDelay} manualMasterVolume={manualMasterVolume} />
+        <InstrumentSelector instrument={instrument} activeVoiceCount={engine.getActiveVoiceCount()} onSelect={selectInstrument} title="Camera performance instrument" />
 
         <aside className="debug-panel" aria-label="Hand tracking diagnostics">
           <div className="debug-heading">
@@ -231,6 +243,9 @@ function App() {
           onScaleChange={setScale}
           onManualAudioAction={releaseGestureAudioOwnership}
           onMasterVolumeChange={setManualMasterVolume}
+          instrument={instrument}
+          activeVoiceCount={engine.getActiveVoiceCount()}
+          onInstrumentChange={selectInstrument}
         />
       </section>
     </main>

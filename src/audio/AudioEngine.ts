@@ -4,6 +4,8 @@ import { DistortionEffect } from './DistortionEffect.ts'
 import { ReverbEffect } from './ReverbEffect.ts'
 import { TapeDelayEffect } from './TapeDelayEffect.ts'
 import { mapRightVerticalToTapeDelay, type TapeDelayParameters } from './TapeDelayMapping.ts'
+import { DEFAULT_INSTRUMENT_ID, getInstrument } from './instruments/instrumentPresets.ts'
+import type { InstrumentDefinition, InstrumentId } from './instruments/instrumentTypes.ts'
 
 export type AudioStatus = 'disabled' | 'starting' | 'ready' | 'suspended' | 'error'
 
@@ -51,6 +53,7 @@ export class AudioEngine {
   private chorusWet = 0
   private reverbWet = 0.1
   private tapeDelayParameters: TapeDelayParameters = mapRightVerticalToTapeDelay(0)
+  private activeInstrument: InstrumentDefinition = getInstrument(DEFAULT_INSTRUMENT_ID)
   private status: AudioStatus = 'disabled'
   private error: string | null = null
   private masterVolume = 1
@@ -113,6 +116,18 @@ export class AudioEngine {
 
   getMasterVolume() { return this.masterVolume }
   getFixedPerformanceGain() { return 1 }
+  getActiveInstrument() { return this.activeInstrument }
+  getActiveVoiceCount() { return this.synth?.activeVoiceCount ?? 0 }
+
+  /** Releases active notes before new voices begin with the selected preset. */
+  setInstrument(id: InstrumentId) {
+    if (this.activeInstrument.id === id) return false
+    this.stop()
+    this.activeInstrument = getInstrument(id)
+    this.synth?.setInstrument(this.activeInstrument)
+    this.notify()
+    return true
+  }
 
   setDistortionWet(wet: number) {
     this.distortionWet = Math.min(1, Math.max(0, wet))
@@ -243,7 +258,7 @@ export class AudioEngine {
     this.chorus.setWet(this.chorusWet)
     this.distortion = new DistortionEffect(context, this.chorus.input)
     this.distortion.setWet(this.distortionWet)
-    this.synth = new PolySynth(context, this.distortion.input)
+    this.synth = new PolySynth(context, this.distortion.input, this.activeInstrument)
     context.onstatechange = () => this.updateStatusFromContext()
   }
 

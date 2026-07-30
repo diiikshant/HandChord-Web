@@ -1,14 +1,12 @@
 import { midiToFrequency } from '../music/MusicTheoryEngine.ts'
-
-export const SYNTH_ENVELOPE = {
-  attackSeconds: 0.03,
-  sustainGain: 0.12,
-  releaseSeconds: 0.2,
-} as const
+import { applyInstrumentOctave, getInstrument } from './instruments/instrumentPresets.ts'
+import type { InstrumentDefinition, InstrumentId } from './instruments/instrumentTypes.ts'
 
 type Voice = {
   gain: GainNode
+  filter: BiquadFilterNode
   oscillators: OscillatorNode[]
+  releaseSeconds: number
 }
 
 /** A small polyphonic synth. It only receives notes from AudioEngine. */
@@ -17,12 +15,22 @@ export class PolySynth {
   private readonly context: AudioContext
   private readonly output: AudioNode
   private readonly maximumVoices: number
+  private instrument: InstrumentDefinition
 
-  constructor(context: AudioContext, output: AudioNode, maximumVoices = 6) {
+  constructor(context: AudioContext, output: AudioNode, instrument: InstrumentDefinition = getInstrument('warm-pad'), maximumVoices = 6) {
     this.context = context
     this.output = output
+    this.instrument = instrument
     this.maximumVoices = maximumVoices
   }
+
+  setInstrument(instrument: InstrumentDefinition) {
+    this.releaseAll()
+    this.instrument = instrument
+  }
+
+  getInstrumentId(): InstrumentId { return this.instrument.id }
+  get activeVoiceCount() { return this.voices.size }
 
   playNotes(midiNotes: number[]) {
     const uniqueNotes = [...new Set(midiNotes)]
@@ -44,43 +52,57 @@ export class PolySynth {
   }
 
   private startVoice(midiNote: number) {
-    const frequency = midiToFrequency(midiNote)
+    const playableMidiNote = applyInstrumentOctave(midiNote, this.instrument)
+    const frequency = midiToFrequency(playableMidiNote)
     if (!Number.isFinite(frequency) || frequency <= 0) {
       throw new Error('The requested note does not have a valid frequency.')
     }
 
     const now = this.context.currentTime
     const voiceGain = this.context.createGain()
-    const mainOscillator = this.context.createOscillator()
-    const warmthOscillator = this.context.createOscillator()
+    const filter = this.context.createBiquadFilter()
+    const { envelope } = this.instrument
+    const peakGain = this.instrument.gainCompensation
+    const sustainGain = Math.max(0.0001, peakGain * envelope.sustainLevel)
     voiceGain.gain.setValueAtTime(0.0001, now)
-    voiceGain.gain.exponentialRampToValueAtTime(SYNTH_ENVELOPE.sustainGain, now + SYNTH_ENVELOPE.attackSeconds)
+    voiceGain.gain.exponentialRampToValueAtTime(peakGain, now + envelope.attackSeconds)
+    voiceGain.gain.exponentialRampToValueAtTime(sustainGain, now + envelope.attackSeconds + envelope.decaySeconds)
+    filter.type = 'lowpass'
+    filter.frequency.setValueAtTime(this.instrument.filter.frequencyHz, now)
+    filter.Q.setValueAtTime(this.instrument.filter.q, now)
 
-    mainOscillator.type = 'triangle'
-    mainOscillator.frequency.setValueAtTime(frequency, now)
-    warmthOscillator.type = 'sine'
-    warmthOscillator.frequency.setValueAtTime(frequency, now)
-    warmthOscillator.detune.setValueAtTime(7, now)
-
-    const warmthGain = this.context.createGain()
-    warmthGain.gain.setValueAtTime(0.35, now)
-    mainOscillator.connect(voiceGain)
-    warmthOscillator.connect(warmthGain).connect(voiceGain)
-    voiceGain.connect(this.output)
-    mainOscillator.start(now)
-    warmthOscillator.start(now)
-    this.voices.set(midiNote, { gain: voiceGain, oscillators: [mainOscillator, warmthOscillator] })
+    const oscillators = this.instrument.oscillators.map((layer) => {
+      const oscillator = this.context.createOscillator()
+      const layerGain = this.context.createGain()
+      oscillator.type = layer.waveform
+      oscillator.frequency.setValueAtTime(frequency, now)
+      oscillator.detune.setValueAtTime(layer.detuneCents, now)
+      layerGain.gain.setValueAtTime(layer.level, now)
+      oscillator.connect(layerGain).connect(filter)
+      oscillator.start(now)
+      return oscillator
+    })
+    filter.connect(voiceGain).connect(this.output)
+    const voice = { gain: voiceGain, filter, oscillators, releaseSeconds: envelope.releaseSeconds }
+    this.voices.set(midiNote, voice)
+    if (this.instrument.autoReleaseSeconds !== undefined) {
+      window.setTimeout(() => {
+        if (this.voices.get(midiNote) !== voice) return
+        this.releaseVoice(voice, this.context.currentTime)
+        this.voices.delete(midiNote)
+      }, this.instrument.autoReleaseSeconds * 1000)
+    }
   }
 
   private releaseVoice(voice: Voice, releaseTime: number) {
     voice.gain.gain.cancelScheduledValues(releaseTime)
     voice.gain.gain.setValueAtTime(Math.max(voice.gain.gain.value, 0.0001), releaseTime)
-    voice.gain.gain.exponentialRampToValueAtTime(0.0001, releaseTime + SYNTH_ENVELOPE.releaseSeconds)
+    voice.gain.gain.exponentialRampToValueAtTime(0.0001, releaseTime + voice.releaseSeconds)
 
     voice.oscillators.forEach((oscillator) => {
-      oscillator.stop(releaseTime + SYNTH_ENVELOPE.releaseSeconds + 0.03)
+      oscillator.stop(releaseTime + voice.releaseSeconds + 0.03)
       oscillator.onended = () => oscillator.disconnect()
     })
-    window.setTimeout(() => voice.gain.disconnect(), (SYNTH_ENVELOPE.releaseSeconds + 0.08) * 1000)
+    window.setTimeout(() => { voice.filter.disconnect(); voice.gain.disconnect() }, (voice.releaseSeconds + 0.08) * 1000)
   }
 }

@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import type { AudioEngine, AudioSnapshot } from '../audio/AudioEngine.ts'
+import type { InstrumentDefinition, InstrumentId } from '../audio/instruments/instrumentTypes.ts'
+import { InstrumentSelector } from './InstrumentSelector.tsx'
 import { CHROMATIC_NOTES, generateDiatonicTriad, type DiatonicChord, type RootKey, type ScaleName } from '../music/MusicTheoryEngine.ts'
 
 type AudioTestProps = {
@@ -11,6 +13,9 @@ type AudioTestProps = {
   onScaleChange: (scale: ScaleName) => void
   onManualAudioAction: () => void
   onMasterVolumeChange: (volume: number) => void
+  instrument: InstrumentDefinition
+  activeVoiceCount: number
+  onInstrumentChange: (id: InstrumentId) => void
 }
 
 const STATUS_COPY = {
@@ -30,6 +35,9 @@ function AudioTest({
   onScaleChange,
   onManualAudioAction,
   onMasterVolumeChange,
+  instrument,
+  activeVoiceCount,
+  onInstrumentChange,
 }: AudioTestProps) {
   const [volume, setVolume] = useState(1)
   const [currentChord, setCurrentChord] = useState<DiatonicChord | null>(null)
@@ -101,6 +109,11 @@ function AudioTest({
     onMasterVolumeChange(nextVolume)
   }
 
+  const changeInstrument = (id: InstrumentId) => {
+    setCurrentChord(null)
+    onInstrumentChange(id)
+  }
+
   const chordButtons = [1, 2, 3, 4, 5, 6].map((degree) => generateDiatonicTriad(root, scale, degree))
   const canPlay = audio.status === 'ready'
 
@@ -160,6 +173,8 @@ function AudioTest({
           />
         </label>
       </div>
+
+      <InstrumentSelector instrument={instrument} activeVoiceCount={activeVoiceCount} onSelect={changeInstrument} title="Audio Test instrument" />
 
       <div className="chord-buttons" aria-label="Chord test buttons">
         {chordButtons.map((chord) => (

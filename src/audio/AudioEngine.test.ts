@@ -40,3 +40,14 @@ test('keeps the manual master volume as the independent safety control', () => {
   assert.equal(engine.getMasterVolume(), 0.45)
   assert.equal(engine.getFixedPerformanceGain(), 1)
 })
+
+test('switches preset state without creating an audio context and keeps the default Warm Pad', () => {
+  const engine = new AudioEngine()
+  assert.equal(engine.getActiveInstrument().id, 'warm-pad')
+  assert.equal(engine.hasTapeDelayGraph(), false)
+
+  assert.equal(engine.setInstrument('pluck'), true)
+  assert.equal(engine.getActiveInstrument().id, 'pluck')
+  assert.equal(engine.setInstrument('pluck'), false)
+  assert.equal(engine.hasTapeDelayGraph(), false)
+})

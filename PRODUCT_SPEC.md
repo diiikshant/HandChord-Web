@@ -52,6 +52,16 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - Audio runs through polyphonic voice gain envelopes, a conservative master gain, a DynamicsCompressorNode, and then the browser audio destination. Oscillators never connect directly to speakers without a gain envelope, and released nodes are stopped and disconnected.
 - The Audio Test remains available for button-only debugging alongside gesture control. Its buttons share the single AudioContext but can be used independently of the camera.
 
+## Built-in instruments
+
+- HandChord includes five built-in instruments: **Warm Pad**, **Soft Keys**, **Pluck**, **Organ**, and **Deep Bass**. **Warm Pad** is the default when no valid saved selection exists.
+- Each instrument is a reusable data definition with oscillator layers, ADSR envelope, low-pass filter, detune, octave offset, and per-voice gain compensation. The definitions are separate from React components and are read by the shared PolySynth only when new voices are created.
+- Warm Pad uses a gently detuned triangle/saw blend with a soft attack and long release. Soft Keys uses smooth sine/triangle layers with a faster attack. Pluck is bright with a short auto-releasing envelope. Organ uses stable sine, triangle, and saw harmonics with near-full sustain. Deep Bass uses lower sine/triangle layers, a one-octave-lower voicing, and a low-pass filter to control low-frequency energy.
+- Selecting an instrument in either the camera performance experience or Audio Test releases the active chord smoothly, applies the selected preset to future voices, and leaves key, scale, manual master volume, calibration, hand tracking, and effect settings unchanged. It does not create a second AudioContext or duplicate effect graph.
+- The selected instrument is persisted locally in browser storage and restored after refresh. Invalid saved data safely falls back to Warm Pad.
+- Every instrument uses the existing effect chain: distortion, chorus, tape delay, reverb, fixed 100% performance gain, manual master gain, and compressor. Gain compensation and the compressor prevent extreme loudness changes, while manual master volume remains the user safety limit.
+- Instrument octave offsets change only playable register, never the chosen chord function: Deep Bass is one octave lower; the other initial presets use the normal register. Built-in instruments remain separate from future personal samples, import, and recording features.
+
 ## Stable two-hand gesture chord control
 
 - The anatomical left hand selects chord position: stable one, two, three, four, and open palm select positions 1 through 5. The anatomical right hand selects the bank: stable open palm selects the primary bank and stable index-only selects the secondary bank. Other right-hand gestures are unsupported for chord selection.

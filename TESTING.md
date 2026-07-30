@@ -77,6 +77,18 @@
 - Refresh after using audio. Confirm a new explicit **Enable Audio** action is required.
 - Test through desktop speakers and headphones. Confirm no clicking, clipping, red console errors, or unexpected audio output.
 
+## Built-in instrument selection
+
+- Confirm **Warm Pad** is selected by default and is shown in both the camera performance selector and the Audio Test selector.
+- Select Soft Keys, Pluck, Organ, and Deep Bass. Confirm each shows its name, description, waveform/envelope debug details, octave offset, gain compensation, and active voice count.
+- Start a button-controlled chord, then switch instruments. Confirm the old chord releases smoothly without stuck notes, and the next chord uses the new sound.
+- Repeat the switching check while Gesture Audio owns a chord. Confirm the chord is released safely, tracking and calibration remain active, and a later chord uses the selected preset.
+- Test each instrument with reverb, distortion, inward/leftward chorus, and tape delay. Confirm all effects remain active and no selector change resets their controls.
+- Verify Deep Bass plays a lower register without excessive low-frequency clipping. Verify Pluck decays and releases on its own without a stuck sustained note.
+- Move the manual master-volume slider with every instrument. Confirm it remains the only output-level control, transitions do not cause extreme loudness jumps, and the fixed performance gain remains 100%.
+- Refresh the page after choosing an instrument. Confirm the selection returns. Set an invalid saved instrument value through browser storage only if comfortable, refresh, and confirm Warm Pad is restored safely.
+- Test speakers and headphones. Confirm no clipping, microphone request, red Chrome console errors, or duplicate/stuck voices.
+
 ## Stable two-hand gesture chord control
 
 - Enable Audio first, then enable the **Gesture Audio** toggle in the live camera panel.
