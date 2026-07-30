@@ -6,8 +6,9 @@ import { GestureDiagnostics } from './components/GestureDiagnostics'
 import { MovementDiagnostics } from './components/MovementDiagnostics'
 import { CalibrationView } from './components/CalibrationView'
 import { ReverbControl } from './components/ReverbControl'
-import { PerformanceVolumeControl } from './components/PerformanceVolumeControl'
 import { DistortionControl } from './components/DistortionControl'
+import { ChorusControl } from './components/ChorusControl'
+import { TapeDelayControl } from './components/TapeDelayControl'
 import { useCamera } from './hooks/useCamera'
 import { useFingerRecognition } from './hooks/useFingerRecognition'
 import { useHandTracking } from './hooks/useHandTracking'
@@ -15,8 +16,9 @@ import { useAudioEngine } from './hooks/useAudioEngine'
 import { useGestureAudio } from './hooks/useGestureAudio'
 import { useMovementTracking } from './hooks/useMovementTracking'
 import { useReverbControl } from './hooks/useReverbControl'
-import { usePerformanceVolumeControl } from './hooks/usePerformanceVolumeControl'
 import { useDistortionControl } from './hooks/useDistortionControl'
+import { useChorusControl } from './hooks/useChorusControl'
+import { useTapeDelayControl } from './hooks/useTapeDelayControl'
 import type { RootKey, ScaleName } from './music/MusicTheoryEngine'
 import type { CanvasDimensions } from './tracking/handTrackingTypes'
 import './App.css'
@@ -34,7 +36,7 @@ function App() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [root, setRoot] = useState<RootKey>('C')
   const [scale, setScale] = useState<ScaleName>('major')
-  const [manualMasterVolume, setManualMasterVolume] = useState(0.3)
+  const [manualMasterVolume, setManualMasterVolume] = useState(1)
   const { startCamera, status: cameraStatus, stopCamera, stream } = useCamera(videoRef)
   const { hands, inferenceFps, modelStatus, trackingStatus, videoDimensions } = useHandTracking(
     videoRef,
@@ -46,7 +48,8 @@ function App() {
   const { engine, audio } = useAudioEngine()
   const reverb = useReverbControl(engine, movement)
   const distortion = useDistortionControl(engine, movement)
-  const performanceVolume = usePerformanceVolumeControl(engine, movement, manualMasterVolume)
+  const chorus = useChorusControl(engine, movement)
+  const tapeDelay = useTapeDelayControl(engine, movement)
   const {
     gestureAudio,
     setGestureAudioEnabled,
@@ -179,7 +182,8 @@ function App() {
         <CalibrationView movement={movement} />
         <ReverbControl reverb={reverb} />
         <DistortionControl distortion={distortion} />
-        <PerformanceVolumeControl volume={performanceVolume} manualMasterVolume={manualMasterVolume} />
+        <ChorusControl chorus={chorus} />
+        <TapeDelayControl tapeDelay={tapeDelay} manualMasterVolume={manualMasterVolume} />
 
         <aside className="debug-panel" aria-label="Hand tracking diagnostics">
           <div className="debug-heading">

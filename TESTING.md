@@ -118,16 +118,27 @@
 - Turn Reverb Control off. Confirm it returns smoothly to its 10% default while chords and tracking continue.
 - Refresh the page, test desktop speakers and headphones, and confirm no console errors.
 
-## Right-hand vertical internal performance volume
+## Right-hand vertical tape delay
 
-- Calibrate rightVertical, enable audio, and turn on **Performance Volume Control**. At the lower position, confirm sound remains audible but quieter; it must not become silent.
-- Move to the midpoint and upper position. Confirm the volume rises smoothly toward full internal gain without changing system volume.
-- Move the right hand slowly upward and downward, then rapidly. Confirm smooth changes without clicks, clipping, or abrupt jumps.
-- Keep left Reverb Control active while moving the right hand. Confirm reverb remains independent and both controls work together.
-- Test both button-controlled and gesture-controlled chords. Confirm right-hand movement does not retrigger, change, or stop chords.
-- Briefly hide the right hand, then keep it hidden. Confirm volume keeps its last safe setting and the panel reports unavailable without stopping audio.
-- Turn Performance Volume Control off. Confirm it returns smoothly to 70% internal gain while reverb, chords, and tracking continue.
-- Adjust the Audio Test master slider. Confirm the panel’s effective output percentage changes as performance gain × manual master gain, and test speakers and headphones with no console errors.
+- Confirm the Tape Delay panel shows a fixed **Performance gain: 100%** while moving either hand. Use the Audio Test manual master slider to change overall output volume; it must remain independent of all movement controls.
+- Calibrate rightVertical through the renamed **Tape Delay** lower and upper steps, enable audio, and turn on **Tape Delay Control**. At the lower position, confirm chords are dry or nearly dry.
+- Move the right hand to midpoint and upper position. Confirm about 280 ms / 20% wet / 21% feedback near midpoint and up to 700 ms / 65% wet / 55% feedback at the upper position.
+- Move upward and downward slowly, then rapidly. Confirm delay changes smoothly without harsh clicks, clipping, runaway feedback, or excessive volume buildup. Let a chord stop at a high setting and confirm the long repeats fade safely.
+- Keep Reverb and Chorus Control active. Confirm tape delay feeds naturally into reverb, chorus remains controlled only by inward/leftward right-horizontal movement, and neither effect changes the other.
+- Test both button-controlled and gesture-controlled chords. Confirm right-hand vertical movement does not retrigger, change, or stop chords.
+- Briefly hide the right hand, then keep it hidden. Confirm delay keeps its last safe setting and the panel reports unavailable without stopping audio.
+- Turn Tape Delay Control off. Confirm wet mix and feedback smoothly return to 0% while the dry chord, reverb, distortion, chorus, and tracking continue.
+- Refresh and confirm calibration persists. Recalibrate only Tape Delay and confirm the other three calibration ranges remain ready. Test speakers and headphones and confirm no Chrome console errors or microphone request.
+
+## Right-hand horizontal chorus width
+
+- Calibrate rightHorizontal, enable audio, and turn on **Chorus Control**. At the calibrated visual-right/outward position, confirm button-controlled and gesture-controlled chords are nearly dry.
+- Move the right hand leftward toward the body. Confirm the panel rises from 0% through about 20% at midpoint to a maximum of 80% wet at the calibrated visual-left position, with gentle widening in the middle and a wide, lush sustained chord at the left.
+- Move slowly left-to-right and right-to-left, then rapidly. Confirm changes are smooth, free from clicks, excessive pitch wobble, metallic feedback, loudness surges, or clipping.
+- Move the right hand diagonally while Tape Delay Control is active. Confirm upward vertical movement changes only tape delay while leftward horizontal movement increases only chorus. Then move all four axes together and confirm reverb, distortion, tape delay, and chorus remain independent.
+- While a gesture chord plays, move the right hand horizontally. Confirm the chord neither restarts nor changes unless its stable finger gesture changes. Confirm the Audio Test buttons remain usable.
+- Briefly hide the right hand, then keep it hidden longer than 500 ms. Confirm the last chorus value remains safe, the panel reports unavailable, and the chord plus the other three axes continue.
+- Turn Chorus Control off. Confirm it smoothly returns to 0% wet while all other controls remain active. Refresh and confirm calibration persists. Test speakers and headphones, then confirm Chrome has no red console errors or microphone request.
 
 ## Left-hand horizontal distortion
 
@@ -135,6 +146,6 @@
 - Move the left hand to the midpoint, then the calibrated visual-right position. Confirm the panel rises from about 0% through about 18% to a maximum of 70% wet, with a usable moderate drive rather than immediate harshness.
 - Move slowly left to right and right to left, then move rapidly. Confirm distortion changes smoothly with no clicks, stuck notes, major loudness surge, or clipping.
 - Move the left hand diagonally while Reverb Control is active. Confirm vertical movement changes reverb and horizontal movement changes distortion independently, without changing the active chord unless the finger gesture changes.
-- Briefly hide the left hand, then keep it hidden longer than 500 ms. Confirm the last distortion amount stays safe, the panel reports unavailable, right-hand volume continues normally, and the chord continues.
-- Turn Distortion Control off while a chord is playing. Confirm it returns smoothly to clean 0% wet while reverb, performance volume, tracking, and the chord continue.
+- Briefly hide the left hand, then keep it hidden longer than 500 ms. Confirm the last distortion amount stays safe, the panel reports unavailable, right-hand tape delay continues normally, and the chord continues.
+- Turn Distortion Control off while a chord is playing. Confirm it returns smoothly to clean 0% wet while reverb, tape delay, chorus, tracking, and the chord continue.
 - Refresh and confirm saved calibration remains available. Test speakers and headphones for clipping or loudness surges, and confirm the Chrome console has no red errors or microphone request.

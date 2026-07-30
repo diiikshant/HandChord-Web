@@ -31,7 +31,7 @@ function AudioTest({
   onManualAudioAction,
   onMasterVolumeChange,
 }: AudioTestProps) {
-  const [volume, setVolume] = useState(0.3)
+  const [volume, setVolume] = useState(1)
   const [currentChord, setCurrentChord] = useState<DiatonicChord | null>(null)
 
   const stopForConfigurationChange = () => {
@@ -153,7 +153,7 @@ function AudioTest({
           <input
             type="range"
             min="0"
-            max="0.8"
+            max="1"
             step="0.01"
             value={volume}
             onChange={(event) => changeVolume(Number(event.target.value))}

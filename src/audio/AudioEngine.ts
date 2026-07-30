@@ -1,6 +1,9 @@
 import { PolySynth } from './PolySynth.ts'
+import { ChorusEffect } from './ChorusEffect.ts'
 import { DistortionEffect } from './DistortionEffect.ts'
 import { ReverbEffect } from './ReverbEffect.ts'
+import { TapeDelayEffect } from './TapeDelayEffect.ts'
+import { mapRightVerticalToTapeDelay, type TapeDelayParameters } from './TapeDelayMapping.ts'
 
 export type AudioStatus = 'disabled' | 'starting' | 'ready' | 'suspended' | 'error'
 
@@ -38,16 +41,19 @@ export class ChordPlaybackState {
 export class AudioEngine {
   private context: AudioContext | null = null
   private masterGain: GainNode | null = null
-  private performanceGain: GainNode | null = null
+  private fixedPerformanceGain: GainNode | null = null
   private synth: PolySynth | null = null
   private distortion: DistortionEffect | null = null
+  private chorus: ChorusEffect | null = null
+  private tapeDelay: TapeDelayEffect | null = null
   private reverb: ReverbEffect | null = null
   private distortionWet = 0
+  private chorusWet = 0
   private reverbWet = 0.1
+  private tapeDelayParameters: TapeDelayParameters = mapRightVerticalToTapeDelay(0)
   private status: AudioStatus = 'disabled'
   private error: string | null = null
-  private masterVolume = 0.3
-  private performanceVolume = 0.7
+  private masterVolume = 1
   private readonly playback = new ChordPlaybackState()
   private readonly listeners = new Set<(snapshot: AudioSnapshot) => void>()
 
@@ -106,11 +112,7 @@ export class AudioEngine {
   }
 
   getMasterVolume() { return this.masterVolume }
-  setPerformanceGain(volume: number) {
-    this.performanceVolume = Math.min(1, Math.max(0.2, volume))
-    if (this.performanceGain && this.context) this.performanceGain.gain.setTargetAtTime(this.performanceVolume, this.context.currentTime, 0.05)
-  }
-  getPerformanceGain() { return this.performanceVolume }
+  getFixedPerformanceGain() { return 1 }
 
   setDistortionWet(wet: number) {
     this.distortionWet = Math.min(1, Math.max(0, wet))
@@ -118,6 +120,23 @@ export class AudioEngine {
   }
 
   getDistortionWet() { return this.distortionWet }
+
+  setChorusWet(wet: number) {
+    this.chorusWet = Math.min(1, Math.max(0, wet))
+    this.chorus?.setWet(this.chorusWet)
+  }
+
+  getChorusWet() { return this.chorusWet }
+
+  hasChorusGraph() { return this.chorus !== null }
+
+  setTapeDelayParameters(parameters: TapeDelayParameters) {
+    this.tapeDelayParameters = parameters
+    this.tapeDelay?.setParameters(parameters)
+  }
+
+  getTapeDelayParameters() { return this.tapeDelayParameters }
+  hasTapeDelayGraph() { return this.tapeDelay !== null }
 
   setReverbWet(wet: number) {
     this.reverbWet = Math.min(1, Math.max(0, wet))
@@ -168,10 +187,14 @@ export class AudioEngine {
     this.synth = null
     this.distortion?.dispose()
     this.distortion = null
+    this.chorus?.dispose()
+    this.chorus = null
+    this.tapeDelay?.dispose()
+    this.tapeDelay = null
     this.reverb?.dispose()
     this.reverb = null
-    this.performanceGain?.disconnect()
-    this.performanceGain = null
+    this.fixedPerformanceGain?.disconnect()
+    this.fixedPerformanceGain = null
     this.masterGain?.disconnect()
     this.masterGain = null
     const context = this.context
@@ -199,7 +222,7 @@ export class AudioEngine {
 
     const context = new AudioContextClass()
     const masterGain = context.createGain()
-    const performanceGain = context.createGain()
+    const fixedPerformanceGain = context.createGain()
     const compressor = context.createDynamicsCompressor()
     masterGain.gain.setValueAtTime(this.masterVolume, context.currentTime)
     compressor.threshold.setValueAtTime(-18, context.currentTime)
@@ -207,15 +230,18 @@ export class AudioEngine {
     compressor.ratio.setValueAtTime(8, context.currentTime)
     compressor.attack.setValueAtTime(0.003, context.currentTime)
     compressor.release.setValueAtTime(0.25, context.currentTime)
-    performanceGain.gain.setValueAtTime(this.performanceVolume, context.currentTime)
-    performanceGain.connect(masterGain).connect(compressor).connect(context.destination)
+    fixedPerformanceGain.gain.setValueAtTime(1, context.currentTime)
+    fixedPerformanceGain.connect(masterGain).connect(compressor).connect(context.destination)
 
     this.context = context
     this.masterGain = masterGain
-    this.performanceGain = performanceGain
-    this.reverb = new ReverbEffect(context, performanceGain)
+    this.fixedPerformanceGain = fixedPerformanceGain
+    this.reverb = new ReverbEffect(context, fixedPerformanceGain)
     this.reverb.setWet(this.reverbWet)
-    this.distortion = new DistortionEffect(context, this.reverb.input)
+    this.tapeDelay = new TapeDelayEffect(context, this.reverb.input, this.tapeDelayParameters)
+    this.chorus = new ChorusEffect(context, this.tapeDelay.input)
+    this.chorus.setWet(this.chorusWet)
+    this.distortion = new DistortionEffect(context, this.chorus.input)
     this.distortion.setWet(this.distortionWet)
     this.synth = new PolySynth(context, this.distortion.input)
     context.onstatechange = () => this.updateStatusFromContext()

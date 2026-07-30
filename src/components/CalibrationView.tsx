@@ -9,12 +9,12 @@ const STEPS: Step[] = [
   { axis: 'leftVertical', role: 'left', coordinate: 'rawY', edge: 'maximum', label: 'Left hand: comfortable upper position' },
   { axis: 'leftHorizontal', role: 'left', coordinate: 'rawX', edge: 'minimum', label: 'Left hand: comfortable visual-left position' },
   { axis: 'leftHorizontal', role: 'left', coordinate: 'rawX', edge: 'maximum', label: 'Left hand: comfortable visual-right position' },
-  { axis: 'rightVertical', role: 'right', coordinate: 'rawY', edge: 'minimum', label: 'Right hand: comfortable lower position' },
-  { axis: 'rightVertical', role: 'right', coordinate: 'rawY', edge: 'maximum', label: 'Right hand: comfortable upper position' },
+  { axis: 'rightVertical', role: 'right', coordinate: 'rawY', edge: 'minimum', label: 'Right hand: Tape Delay lower position' },
+  { axis: 'rightVertical', role: 'right', coordinate: 'rawY', edge: 'maximum', label: 'Right hand: Tape Delay upper position' },
   { axis: 'rightHorizontal', role: 'right', coordinate: 'rawX', edge: 'minimum', label: 'Right hand: comfortable visual-left position' },
   { axis: 'rightHorizontal', role: 'right', coordinate: 'rawX', edge: 'maximum', label: 'Right hand: comfortable visual-right position' },
 ]
-const AXIS_LABELS: Record<AxisName, string> = { leftVertical: 'Reverb range', leftHorizontal: 'Distortion range', rightVertical: 'Volume range', rightHorizontal: 'Chorus range' }
+const AXIS_LABELS: Record<AxisName, string> = { leftVertical: 'Reverb range', leftHorizontal: 'Distortion range', rightVertical: 'Tape Delay range', rightHorizontal: 'Chorus range' }
 
 export function CalibrationView({ movement }: { movement: MovementState }) {
   const [queue, setQueue] = useState<Step[]>([])
@@ -64,7 +64,7 @@ export function CalibrationView({ movement }: { movement: MovementState }) {
     <div className="calibration-actions"><button className="primary-button" type="button" onClick={() => start(STEPS)}>Start Full Calibration</button>
       <button className="secondary-button" type="button" onClick={() => { movement.service.clear('leftVertical'); start(STEPS.slice(0, 2)) }}>Recalibrate Reverb range</button>
       <button className="secondary-button" type="button" onClick={() => { movement.service.clear('leftHorizontal'); start(STEPS.slice(2, 4)) }}>Recalibrate Distortion range</button>
-      <button className="secondary-button" type="button" onClick={() => { movement.service.clear('rightVertical'); start(STEPS.slice(4, 6)) }}>Recalibrate Volume range</button>
+      <button className="secondary-button" type="button" onClick={() => { movement.service.clear('rightVertical'); start(STEPS.slice(4, 6)) }}>Recalibrate Tape Delay range</button>
       <button className="secondary-button" type="button" onClick={() => { movement.service.clear('rightHorizontal'); start(STEPS.slice(6, 8)) }}>Recalibrate Chorus range</button>
       <button className="secondary-button" type="button" onClick={() => { movement.service.clearLeftHand(); start(STEPS.slice(0, 4)) }}>Recalibrate Left Hand</button>
       <button className="secondary-button" type="button" onClick={() => { movement.service.clearRightHand(); start(STEPS.slice(4, 8)) }}>Recalibrate Right Hand</button>
