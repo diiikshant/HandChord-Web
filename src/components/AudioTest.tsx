@@ -10,6 +10,7 @@ type AudioTestProps = {
   onRootChange: (root: RootKey) => void
   onScaleChange: (scale: ScaleName) => void
   onManualAudioAction: () => void
+  onMasterVolumeChange: (volume: number) => void
 }
 
 const STATUS_COPY = {
@@ -28,6 +29,7 @@ function AudioTest({
   onRootChange,
   onScaleChange,
   onManualAudioAction,
+  onMasterVolumeChange,
 }: AudioTestProps) {
   const [volume, setVolume] = useState(0.3)
   const [currentChord, setCurrentChord] = useState<DiatonicChord | null>(null)
@@ -96,6 +98,7 @@ function AudioTest({
   const changeVolume = (nextVolume: number) => {
     setVolume(nextVolume)
     engine.setMasterVolume(nextVolume)
+    onMasterVolumeChange(nextVolume)
   }
 
   const chordButtons = [1, 2, 3, 4, 5, 6].map((degree) => generateDiatonicTriad(root, scale, degree))

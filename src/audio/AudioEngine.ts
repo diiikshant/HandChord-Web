@@ -37,12 +37,14 @@ export class ChordPlaybackState {
 export class AudioEngine {
   private context: AudioContext | null = null
   private masterGain: GainNode | null = null
+  private performanceGain: GainNode | null = null
   private synth: PolySynth | null = null
   private reverb: ReverbEffect | null = null
   private reverbWet = 0.1
   private status: AudioStatus = 'disabled'
   private error: string | null = null
   private masterVolume = 0.3
+  private performanceVolume = 0.7
   private readonly playback = new ChordPlaybackState()
   private readonly listeners = new Set<(snapshot: AudioSnapshot) => void>()
 
@@ -100,6 +102,13 @@ export class AudioEngine {
     }
   }
 
+  getMasterVolume() { return this.masterVolume }
+  setPerformanceGain(volume: number) {
+    this.performanceVolume = Math.min(1, Math.max(0.2, volume))
+    if (this.performanceGain && this.context) this.performanceGain.gain.setTargetAtTime(this.performanceVolume, this.context.currentTime, 0.05)
+  }
+  getPerformanceGain() { return this.performanceVolume }
+
   setReverbWet(wet: number) {
     this.reverbWet = Math.min(1, Math.max(0, wet))
     this.reverb?.setWet(this.reverbWet)
@@ -149,6 +158,8 @@ export class AudioEngine {
     this.synth = null
     this.reverb?.dispose()
     this.reverb = null
+    this.performanceGain?.disconnect()
+    this.performanceGain = null
     this.masterGain?.disconnect()
     this.masterGain = null
     const context = this.context
@@ -176,6 +187,7 @@ export class AudioEngine {
 
     const context = new AudioContextClass()
     const masterGain = context.createGain()
+    const performanceGain = context.createGain()
     const compressor = context.createDynamicsCompressor()
     masterGain.gain.setValueAtTime(this.masterVolume, context.currentTime)
     compressor.threshold.setValueAtTime(-18, context.currentTime)
@@ -183,11 +195,13 @@ export class AudioEngine {
     compressor.ratio.setValueAtTime(8, context.currentTime)
     compressor.attack.setValueAtTime(0.003, context.currentTime)
     compressor.release.setValueAtTime(0.25, context.currentTime)
-    masterGain.connect(compressor).connect(context.destination)
+    performanceGain.gain.setValueAtTime(this.performanceVolume, context.currentTime)
+    performanceGain.connect(masterGain).connect(compressor).connect(context.destination)
 
     this.context = context
     this.masterGain = masterGain
-    this.reverb = new ReverbEffect(context, masterGain)
+    this.performanceGain = performanceGain
+    this.reverb = new ReverbEffect(context, performanceGain)
     this.reverb.setWet(this.reverbWet)
     this.synth = new PolySynth(context, this.reverb.input)
     context.onstatechange = () => this.updateStatusFromContext()

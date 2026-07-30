@@ -81,3 +81,12 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - The generated local impulse response has an approximately 6-second decay with channel variation for stereo width. Wet and dry gain changes use smooth targets that settle in roughly 300 ms, avoiding per-frame jumps and loudness surges.
 - Reverb Control requires a valid leftVertical calibration. If missing or disabled, it safely uses 10% wet and displays **Reverb calibration required** when applicable. Temporary left-hand loss preserves the last safe reverb setting and never stops chord playback.
 - Reverb movement does not retrigger chords, change chord latching, alter finger recognition, or affect the primary/secondary banks or both-fist stop.
+
+## Right-hand vertical internal performance volume
+
+- Anatomical right-hand vertical movement controls only HandChord’s internal performance volume. It never changes the browser, operating-system, speaker, or headphone system volume.
+- The calibrated lower position maps to 20% gain, the upper position maps to 100%, and the response is `0.2 + 0.8 × value^1.15`. Its midpoint is about 56%, which keeps the middle of the physical range comfortably usable while never mapping the lower position to silence.
+- The performance gain stage is built once after dry/reverb routing and before the manual master gain. Gain changes use smooth AudioParam automation and settle in roughly 150 ms; movement never recreates the graph.
+- Final internal output is performance gain × manual master gain. The manual master volume remains the user’s overall safety limit.
+- If rightVertical is uncalibrated or Performance Volume Control is off, the app safely uses 70% performance gain and shows the appropriate calibration or control status. Temporary right-hand loss preserves the last safe value and never stops a chord or disables reverb.
+- Volume movement never retriggers chords, changes finger recognition, or changes chord banks. Left horizontal and right horizontal remain disconnected from audio during this milestone.

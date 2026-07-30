@@ -6,6 +6,7 @@ import { GestureDiagnostics } from './components/GestureDiagnostics'
 import { MovementDiagnostics } from './components/MovementDiagnostics'
 import { CalibrationView } from './components/CalibrationView'
 import { ReverbControl } from './components/ReverbControl'
+import { PerformanceVolumeControl } from './components/PerformanceVolumeControl'
 import { useCamera } from './hooks/useCamera'
 import { useFingerRecognition } from './hooks/useFingerRecognition'
 import { useHandTracking } from './hooks/useHandTracking'
@@ -13,6 +14,7 @@ import { useAudioEngine } from './hooks/useAudioEngine'
 import { useGestureAudio } from './hooks/useGestureAudio'
 import { useMovementTracking } from './hooks/useMovementTracking'
 import { useReverbControl } from './hooks/useReverbControl'
+import { usePerformanceVolumeControl } from './hooks/usePerformanceVolumeControl'
 import type { RootKey, ScaleName } from './music/MusicTheoryEngine'
 import type { CanvasDimensions } from './tracking/handTrackingTypes'
 import './App.css'
@@ -30,6 +32,7 @@ function App() {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [root, setRoot] = useState<RootKey>('C')
   const [scale, setScale] = useState<ScaleName>('major')
+  const [manualMasterVolume, setManualMasterVolume] = useState(0.3)
   const { startCamera, status: cameraStatus, stopCamera, stream } = useCamera(videoRef)
   const { hands, inferenceFps, modelStatus, trackingStatus, videoDimensions } = useHandTracking(
     videoRef,
@@ -40,6 +43,7 @@ function App() {
   const movement = useMovementTracking(hands)
   const { engine, audio } = useAudioEngine()
   const reverb = useReverbControl(engine, movement)
+  const performanceVolume = usePerformanceVolumeControl(engine, movement, manualMasterVolume)
   const {
     gestureAudio,
     setGestureAudioEnabled,
@@ -171,6 +175,7 @@ function App() {
         <MovementDiagnostics movement={movement} />
         <CalibrationView movement={movement} />
         <ReverbControl reverb={reverb} />
+        <PerformanceVolumeControl volume={performanceVolume} manualMasterVolume={manualMasterVolume} />
 
         <aside className="debug-panel" aria-label="Hand tracking diagnostics">
           <div className="debug-heading">
@@ -217,6 +222,7 @@ function App() {
           onRootChange={setRoot}
           onScaleChange={setScale}
           onManualAudioAction={releaseGestureAudioOwnership}
+          onMasterVolumeChange={setManualMasterVolume}
         />
       </section>
     </main>

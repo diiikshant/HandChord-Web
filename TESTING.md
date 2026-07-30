@@ -117,3 +117,14 @@
 - Briefly hide the left hand, then keep it hidden. Confirm the last reverb amount stays safe and the panel reports temporary unavailability without stopping audio.
 - Turn Reverb Control off. Confirm it returns smoothly to its 10% default while chords and tracking continue.
 - Refresh the page, test desktop speakers and headphones, and confirm no console errors.
+
+## Right-hand vertical internal performance volume
+
+- Calibrate rightVertical, enable audio, and turn on **Performance Volume Control**. At the lower position, confirm sound remains audible but quieter; it must not become silent.
+- Move to the midpoint and upper position. Confirm the volume rises smoothly toward full internal gain without changing system volume.
+- Move the right hand slowly upward and downward, then rapidly. Confirm smooth changes without clicks, clipping, or abrupt jumps.
+- Keep left Reverb Control active while moving the right hand. Confirm reverb remains independent and both controls work together.
+- Test both button-controlled and gesture-controlled chords. Confirm right-hand movement does not retrigger, change, or stop chords.
+- Briefly hide the right hand, then keep it hidden. Confirm volume keeps its last safe setting and the panel reports unavailable without stopping audio.
+- Turn Performance Volume Control off. Confirm it returns smoothly to 70% internal gain while reverb, chords, and tracking continue.
+- Adjust the Audio Test master slider. Confirm the panel’s effective output percentage changes as performance gain × manual master gain, and test speakers and headphones with no console errors.
