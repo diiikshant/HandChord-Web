@@ -6,7 +6,7 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - Left-hand horizontal movement controls distortion.
 - Right-hand vertical movement controls tape delay.
 - Right-hand horizontal movement controls chorus.
-- Built-in sounds and local personal samples are available; microphone recording, composition looping, and arrangement remain future work.
+- Built-in sounds, local personal samples, microphone personal-sound recording, and session-only composition layers are available; project saving and arrangement remain future work.
 - Camera and audio processing should happen locally in the browser.
 
 ## Camera preview
@@ -151,4 +151,14 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - A recorded loop plays continuously from its exact start through its exact selected duration. Live performance may continue over it, but neither live playing nor loop playback creates an extra layer or feeds back into recording.
 - Re-record replaces a loop only after a successful capture; Clear and successful replacement support one in-memory Undo. Composition loops are session-only and disappear on page refresh. Personal Sounds continue to persist separately.
 - Both-fist Stop releases live voices and stops loop playback for an intuitive emergency stop, but never deletes the loop.
-- Overdubbing, multiple layers, project saving, export, timeline editing, and arrangement remain out of scope. Vocal Track Recording remains a later dedicated feature after composition loops, layer management, and project saving.
+- Project saving, export, timeline editing, full-song arrangement, and vocal-track recording remain out of scope. Vocal Track Recording remains a later dedicated feature after layer management and project saving.
+
+## Multi-layer composition
+
+- Users can create up to four synchronised internal-performance layers in one session-only composition.
+- Layer 1 establishes the composition BPM, 4/4 bar count, exact duration, sample rate, and frame count. All later layers must match that shared definition exactly.
+- Existing audible layers play as backing during a new-layer recording, but use a separate composition bus and are never captured into the new live-performance layer.
+- Effects are baked into a layer while it is recorded. Layer playback bypasses distortion, chorus, tape delay, and reverb so a recorded layer is never double-processed.
+- Users can select a layer, rename it, mute it, solo it, set its nondestructive playback volume from 0% to 150%, replace it, or delete it. Multiple unmuted solo layers may play together.
+- Replace retains the old layer until processing succeeds. Delete, replace, and Clear Composition have one-level destructive Undo.
+- Composition data remains session-only. Project saving is the next milestone; dedicated Vocal Track Recording follows project saving and is not included here.

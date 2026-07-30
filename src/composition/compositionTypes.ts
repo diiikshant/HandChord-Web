@@ -1,7 +1,7 @@
-export type TransportState = 'idle' | 'armed' | 'countingIn' | 'recording' | 'processing' | 'loopReady' | 'playing' | 'stopped' | 'error'
-
+export type TransportState = 'idle' | 'armed' | 'countingIn' | 'recordingLayer' | 'processingLayer' | 'compositionReady' | 'playing' | 'stopped' | 'replacingLayer' | 'error'
 export type CountInBars = 0 | 1 | 2
 export type LoopBars = 1 | 2 | 4 | 8
+export const MAX_COMPOSITION_LAYERS = 4
 
 export type CompositionSettings = {
   bpm: number
@@ -11,9 +11,11 @@ export type CompositionSettings = {
   metronomeGain: number
 }
 
-export type CompositionLoopMetadata = {
+/** Serializable by design: runtime AudioBuffers belong in a separate in-memory store. */
+export type CompositionLayerMetadata = {
   id: string
   name: string
+  order: number
   bpm: number
   timeSignature: '4/4'
   barCount: LoopBars
@@ -22,16 +24,33 @@ export type CompositionLoopMetadata = {
   sampleRate: number
   frameCount: number
   channelCount: number
+  muted: boolean
+  solo: boolean
+  volume: number
   createdAt: number
+  modifiedAt: number
   sourceInstrumentId: string
+  sourceSoundType: 'built-in' | 'personal-sample'
   boundaryCrossfadeDuration: number
   recordingDiscrepancyFrames: number
   recordingArchitectureVersion: 1
 }
 
-export type CompositionLoop = {
-  buffer: AudioBuffer
-  metadata: CompositionLoopMetadata
+export type CompositionSession = {
+  id: string
+  name: string
+  bpm: number
+  timeSignature: '4/4'
+  barCount: LoopBars
+  durationSeconds: number
+  sampleRate: number
+  expectedFrameCount: number
+  layers: CompositionLayerMetadata[]
+  activeLayerId: string | null
+  createdAt: number
+  modifiedAt: number
+  sessionOnly: true
+  architectureVersion: 2
 }
 
 export type TransportSchedule = {
@@ -47,11 +66,12 @@ export type TransportSchedule = {
   expectedFrameCount: number
 }
 
+export type UndoAction = 'delete-layer' | 'replace-layer' | 'clear-composition' | null
+
 export type CompositionTransportSnapshot = {
   state: TransportState
   settings: CompositionSettings
-  loop: CompositionLoop | null
-  undoLoop: CompositionLoop | null
+  composition: CompositionSession | null
   error: string | null
   warning: string | null
   schedule: TransportSchedule | null
@@ -63,12 +83,15 @@ export type CompositionTransportSnapshot = {
   workletStatus: 'idle' | 'loading' | 'ready' | 'error'
   recordingTapActive: boolean
   receivedFrameCount: number
+  undoAction: UndoAction
+  sourceGroupSize: number
+  sharedPlaybackStartTime: number | null
+  compositionBusActive: boolean
+  audibleLayerIds: string[]
+  mutedLayerIds: string[]
+  soloedLayerIds: string[]
+  runtimeBufferIds: string[]
+  pendingSilentLayerId: string | null
 }
 
-export const DEFAULT_COMPOSITION_SETTINGS: CompositionSettings = {
-  bpm: 100,
-  barCount: 4,
-  countInBars: 1,
-  metronomeEnabled: true,
-  metronomeGain: 0.18,
-}
+export const DEFAULT_COMPOSITION_SETTINGS: CompositionSettings = { bpm: 100, barCount: 4, countInBars: 1, metronomeEnabled: true, metronomeGain: 0.18 }

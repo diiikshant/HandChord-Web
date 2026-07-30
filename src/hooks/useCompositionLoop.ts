@@ -5,8 +5,10 @@ import type { CompositionTransportSnapshot } from '../composition/compositionTyp
 
 const INITIAL: CompositionTransportSnapshot = {
   state: 'idle', settings: { bpm: 100, barCount: 4, countInBars: 1, metronomeEnabled: true, metronomeGain: 0.18 },
-  loop: null, undoLoop: null, error: null, warning: null, schedule: null, currentBar: 1, currentBeat: 1,
+  composition: null, error: null, warning: null, schedule: null, currentBar: 1, currentBeat: 1,
   remainingCountInBars: 0, loopCycleCount: 0, playbackActive: false, workletStatus: 'idle', recordingTapActive: false, receivedFrameCount: 0,
+  undoAction: null, sourceGroupSize: 0, sharedPlaybackStartTime: null, compositionBusActive: false,
+  audibleLayerIds: [], mutedLayerIds: [], soloedLayerIds: [], runtimeBufferIds: [], pendingSilentLayerId: null,
 }
 
 /** Keeps composition transport decisions outside React and uses animation frames only for display refreshes. */

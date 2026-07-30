@@ -62,7 +62,7 @@ function App() {
     gestureAudio,
     setGestureAudioEnabled,
     releaseGestureAudioOwnership,
-  } = useGestureAudio({ engine, recognitions, liveHandCount: hands.length, root, scale, onEmergencyStop: () => transport.stopLoop() })
+  } = useGestureAudio({ engine, recognitions, liveHandCount: hands.length, root, scale, onEmergencyStop: () => transport.stopAllLayers() })
   const [canvasDimensions, setCanvasDimensions] = useState<CanvasDimensions>({
     width: 0,
     height: 0,

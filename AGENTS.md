@@ -27,3 +27,6 @@ These are the permanent rules for this project:
 - Internal composition recording must exclude the metronome, manual master gain, final compressor, and composition-loop playback.
 - Register the composition AudioWorklet once per AudioContext, and never route loop playback back into the performance recording tap.
 - Composition transport changes must follow its explicit state model, and every loop playback AudioBufferSourceNode must receive explicit stop and cleanup.
+- All layers in one composition must share the same timing definition and use one shared AudioContext playback start time.
+- Keep runtime composition AudioBuffers separate from serialisable layer metadata; existing layers must never be baked into a newly recorded layer.
+- Layer effects are baked during recording and layer playback must not pass through those effects a second time.

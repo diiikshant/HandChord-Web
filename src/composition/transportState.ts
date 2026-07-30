@@ -1,15 +1,16 @@
 import type { TransportState } from './compositionTypes.ts'
 
 const TRANSITIONS: Record<TransportState, readonly TransportState[]> = {
-  idle: ['armed', 'loopReady', 'error'],
-  armed: ['countingIn', 'recording', 'idle', 'error'],
-  countingIn: ['recording', 'idle', 'error'],
-  recording: ['processing', 'idle', 'error'],
-  processing: ['loopReady', 'error'],
-  loopReady: ['armed', 'playing', 'idle', 'error'],
-  playing: ['stopped', 'armed', 'idle', 'error'],
-  stopped: ['playing', 'armed', 'loopReady', 'idle', 'error'],
-  error: ['idle', 'armed', 'loopReady'],
+  idle: ['armed', 'error'],
+  armed: ['countingIn', 'recordingLayer', 'idle', 'error'],
+  countingIn: ['recordingLayer', 'idle', 'error'],
+  recordingLayer: ['processingLayer', 'idle', 'error'],
+  processingLayer: ['compositionReady', 'error'],
+  compositionReady: ['armed', 'replacingLayer', 'playing', 'idle', 'error'],
+  playing: ['stopped', 'armed', 'replacingLayer', 'idle', 'error'],
+  stopped: ['playing', 'armed', 'replacingLayer', 'compositionReady', 'idle', 'error'],
+  replacingLayer: ['countingIn', 'recordingLayer', 'compositionReady', 'error'],
+  error: ['idle', 'armed', 'compositionReady'],
 }
 
 export function canTransition(from: TransportState, to: TransportState) {

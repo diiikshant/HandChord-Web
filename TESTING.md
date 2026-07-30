@@ -224,3 +224,14 @@
 - Test short boundary clicks, long reverb tails, and high tape-delay feedback. The loop remains exact duration; tails outside selected bars are intentionally not captured and may make the boundary noticeable.
 - Hide the page during count-in or recording. Confirm capture cancels safely and any previous loop remains. Temporary hand-tracking loss must not stop transport playback. Check speakers, headphones, CPU/memory after repeated records, and Chrome console for errors.
 - Known issue: some pitched sampled chords may still have imperfectly equal audible note durations. This remains a separate unresolved issue and must not regress during loop testing.
+
+## Multi-layer composition
+
+- Record first, second, third, and fourth layers. Attempt a fifth layer and confirm it is disabled/rejected. Test one-, two-, four-, and eight-bar sessions at 40, 100, and 220 BPM.
+- While recording a later layer, confirm existing unmuted backing layers begin exactly at the post-count-in boundary and are audible, but do not appear again inside the newly recorded layer. Confirm metronome clicks are excluded too.
+- Test built-in instruments, imported personal sounds, recorded personal sounds, looping sample instruments, gesture chords, button chords, and all four effects for layer recording.
+- Test mute, one solo, multiple solos, and a muted+soloed layer. Confirm controls do not alter stored layer audio and do not unnecessarily restart playback. Test every layer volume from 0% to 150% and confirm manual master remains independent.
+- Rename a layer, replace it successfully, cancel or fail replacement, delete a layer, delete the last layer, Clear Composition, and Undo each destructive action. Confirm replacement preserves its controls and a failed replacement preserves the old layer.
+- Start all layers, Stop, replay, and use both-fist emergency Stop. Confirm fresh sources are created on replay, every active source stops together, and layer buffers remain intact. Play live gesture/button chords over the composition without creating another layer.
+- Test a silent or very quiet capture. Confirm Keep Layer / Cancel is offered before it enters the composition. Test hiding the page during recording, refresh removing composition layers, Personal Sounds and calibration surviving refresh, speaker/headphone output, four-layer CPU/memory use, and no console errors.
+- Known issue: some pitched sampled chords may still have imperfectly equal audible note durations. It remains intentionally unresolved and must not regress.

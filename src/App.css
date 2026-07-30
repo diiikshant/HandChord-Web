@@ -631,6 +631,69 @@ button:disabled {
   color: var(--error);
 }
 
+.composition-layer-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.composition-layer {
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--debug-background) 76%, #000);
+}
+
+.composition-layer-active {
+  border-color: color-mix(in srgb, var(--accent) 55%, var(--border));
+}
+
+.composition-layer-select {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0;
+  border: 0;
+  color: var(--text-heading);
+  background: transparent;
+  font: inherit;
+  cursor: pointer;
+}
+
+.composition-layer-select span,
+.composition-layer small {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.composition-layer-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 8px;
+}
+
+.composition-layer-controls label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-heading);
+  font-size: 0.8rem;
+}
+
+.composition-layer-controls label:has(input[type='range']) {
+  min-width: 150px;
+  align-items: flex-start;
+  flex-direction: column;
+}
+
+.composition-layer-controls .secondary-button {
+  min-width: auto;
+  padding: 8px 10px;
+}
+
 .recording-live > div:first-child {
   display: flex;
   justify-content: space-between;
