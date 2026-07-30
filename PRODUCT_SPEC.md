@@ -6,7 +6,7 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - Left-hand horizontal movement controls distortion.
 - Right-hand vertical movement controls tape delay.
 - Right-hand horizontal movement controls chorus.
-- Built-in sounds, personal samples, looping and composition will be added after the core instrument is stable.
+- Built-in sounds and local personal samples are available; microphone recording, composition looping, and arrangement remain future work.
 - Camera and audio processing should happen locally in the browser.
 
 ## Camera preview
@@ -60,7 +60,18 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - Selecting an instrument in either the camera performance experience or Audio Test releases the active chord smoothly, applies the selected preset to future voices, and leaves key, scale, manual master volume, calibration, hand tracking, and effect settings unchanged. It does not create a second AudioContext or duplicate effect graph.
 - The selected instrument is persisted locally in browser storage and restored after refresh. Invalid saved data safely falls back to Warm Pad.
 - Every instrument uses the existing effect chain: distortion, chorus, tape delay, reverb, fixed 100% performance gain, manual master gain, and compressor. Gain compensation and the compressor prevent extreme loudness changes, while manual master volume remains the user safety limit.
-- Instrument octave offsets change only playable register, never the chosen chord function: Deep Bass is one octave lower; the other initial presets use the normal register. Built-in instruments remain separate from future personal samples, import, and recording features.
+- Instrument octave offsets change only playable register, never the chosen chord function: Deep Bass is one octave lower; the other initial presets use the normal register. Built-in instruments share the common sound-source architecture with personal samples, while microphone recording remains future work.
+
+## Personal sounds
+
+- Users can import a short personal audio file locally through the browser file picker. Browser-decodable WAV, MP3, M4A/AAC, and OGG files are supported up to 12 MB and 10 seconds. Files are decoded through the existing AudioContext and are never uploaded to a server.
+- The lightweight sample editor shows file name, duration, downsampled waveform, trim start/end, preview/stop, fade-in/out, normalisation, reverse, mode, manual root note, loop setting, Save, and Cancel. Trim settings are saved as metadata with the original local audio rather than destructively rewriting it; at least 80 ms must remain.
+- **Play as Instrument** creates a new one-use sample source for each chord voice, pitch-shifts it from the manually assigned root note, and applies an envelope. Its **Loop Sample** setting defaults to off. When enabled, every pitched voice repeats the selected trimmed region while its chord remains active; chord changes, Stop, Gesture Audio off, source/instrument changes, page backgrounding, and disposal smoothly release the loop. **Trigger as One-shot** always triggers one trimmed, unlooped sample at original pitch for each chord action, suited to percussion, speech, impacts, and effects.
+- Instrument playback rate is `2^(semitones / 12)`, clamped from 0.5× to 2×. Notes far from the root select a closer octave first where possible. Automatic pitch detection and advanced loop-point editing are out of scope.
+- Fades default to 15 ms to avoid clicks. Looping needs a trimmed region of at least 120 ms. Its loop start/end are the trim start/end, and a 30 ms processed edge fade (clamped to at most 50 ms or one quarter of the loop) reduces clicks. A subtle boundary dip can remain; separate loop-point and seamless-crossfade editing are out of scope. Peak normalisation targets 0.85 amplitude with at most 4× gain and skips near-silent files. Reverse and all processing remain local.
+- Saved personal sounds include ID, name, source type, mode, original file name, root MIDI note, trim range, fades, normalisation gain, reverse, loop enabled/start/end/edge fade settings, and timestamps. Users can preview, select, rename, edit, duplicate, and delete them. Deleting the active personal sound falls back to Warm Pad.
+- Personal sounds use IndexedDB, not localStorage, for original audio bytes and metadata. They survive refresh and browser restart; invalid or missing records are handled safely, and older records with the original loop flag are normalised safely. localStorage remains only for small preferences.
+- Built-in and personal sounds share one sound-source architecture and the same signal path: sound source → distortion → chorus → tape delay → reverb → fixed performance gain → manual master gain → compressor → audio destination. Selecting a source does not reset calibration, key, scale, effects, tracking, or chord mapping.
 
 ## Stable two-hand gesture chord control
 

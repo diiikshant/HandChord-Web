@@ -6,6 +6,9 @@ import { TapeDelayEffect } from './TapeDelayEffect.ts'
 import { mapRightVerticalToTapeDelay, type TapeDelayParameters } from './TapeDelayMapping.ts'
 import { DEFAULT_INSTRUMENT_ID, getInstrument } from './instruments/instrumentPresets.ts'
 import type { InstrumentDefinition, InstrumentId } from './instruments/instrumentTypes.ts'
+import { SampleInstrument } from './sounds/SampleInstrument.ts'
+import { reverseAudioBuffer } from './sounds/sampleMath.ts'
+import type { PersonalSound, SoundSource } from './sounds/soundTypes.ts'
 
 export type AudioStatus = 'disabled' | 'starting' | 'ready' | 'suspended' | 'error'
 
@@ -45,6 +48,7 @@ export class AudioEngine {
   private masterGain: GainNode | null = null
   private fixedPerformanceGain: GainNode | null = null
   private synth: PolySynth | null = null
+  private sampleInstrument: SampleInstrument | null = null
   private distortion: DistortionEffect | null = null
   private chorus: ChorusEffect | null = null
   private tapeDelay: TapeDelayEffect | null = null
@@ -54,6 +58,8 @@ export class AudioEngine {
   private reverbWet = 0.1
   private tapeDelayParameters: TapeDelayParameters = mapRightVerticalToTapeDelay(0)
   private activeInstrument: InstrumentDefinition = getInstrument(DEFAULT_INSTRUMENT_ID)
+  private activeSoundSource: SoundSource = { type: 'built-in', instrumentId: DEFAULT_INSTRUMENT_ID }
+  private activePersonalSound: PersonalSound | null = null
   private status: AudioStatus = 'disabled'
   private error: string | null = null
   private masterVolume = 1
@@ -117,16 +123,43 @@ export class AudioEngine {
   getMasterVolume() { return this.masterVolume }
   getFixedPerformanceGain() { return 1 }
   getActiveInstrument() { return this.activeInstrument }
-  getActiveVoiceCount() { return this.synth?.activeVoiceCount ?? 0 }
+  getActiveVoiceCount() { return (this.synth?.activeVoiceCount ?? 0) + (this.sampleInstrument?.activeVoiceCount ?? 0) }
+  getActiveSoundSource() { return this.activeSoundSource }
+  getSamplePlaybackRates() { return this.sampleInstrument?.playbackRates ?? [] }
 
   /** Releases active notes before new voices begin with the selected preset. */
   setInstrument(id: InstrumentId) {
-    if (this.activeInstrument.id === id) return false
+    if (this.activeSoundSource.type === 'built-in' && this.activeInstrument.id === id) return false
     this.stop()
     this.activeInstrument = getInstrument(id)
+    this.activeSoundSource = { type: 'built-in', instrumentId: id }
+    this.activePersonalSound = null
+    this.sampleInstrument?.clearSound()
     this.synth?.setInstrument(this.activeInstrument)
     this.notify()
     return true
+  }
+
+  async decodeAudioData(audioData: ArrayBuffer) {
+    if (!this.context) throw new Error('Enable Audio before importing a personal sound.')
+    try { return await this.context.decodeAudioData(audioData.slice(0)) }
+    catch { throw new Error('This audio file could not be decoded by this browser.') }
+  }
+
+  setPersonalSound(sound: PersonalSound, buffer: AudioBuffer) {
+    this.stop()
+    if (!this.sampleInstrument) throw new Error('Enable Audio before selecting a personal sound.')
+    this.sampleInstrument.setSound(sound, sound.reverse && this.context ? reverseAudioBuffer(this.context, buffer) : buffer)
+    this.activeSoundSource = { type: 'personal-sample', soundId: sound.id }
+    this.activePersonalSound = sound
+    this.notify()
+  }
+
+  previewPersonalSound(sound: PersonalSound, buffer: AudioBuffer) {
+    this.ensureReady()
+    if (!this.sampleInstrument) throw new Error('The sample playback engine is unavailable.')
+    this.stop()
+    this.sampleInstrument.preview(sound, sound.reverse && this.context ? reverseAudioBuffer(this.context, buffer) : buffer)
   }
 
   setDistortionWet(wet: number) {
@@ -162,13 +195,17 @@ export class AudioEngine {
 
   playChord(chordId: string, midiNotes: number[]) {
     this.ensureReady()
-    if (!this.playback.trigger(chordId)) {
+    const newChord = this.playback.trigger(chordId)
+    const repeatOneShot = this.activePersonalSound?.mode === 'one-shot'
+    if (!newChord && !repeatOneShot) {
       return false
     }
 
     try {
       this.synth?.releaseAll()
-      this.synth?.playNotes(midiNotes)
+      this.sampleInstrument?.releaseAll()
+      if (this.activeSoundSource.type === 'personal-sample') this.sampleInstrument?.playChord(chordId, midiNotes)
+      else this.synth?.playNotes(midiNotes)
       this.notify()
       return true
     } catch (error) {
@@ -192,6 +229,7 @@ export class AudioEngine {
 
   stop() {
     this.synth?.releaseAll()
+    this.sampleInstrument?.releaseAll()
     this.playback.stop()
     this.notify()
   }
@@ -200,6 +238,8 @@ export class AudioEngine {
     this.stop()
     this.synth?.dispose()
     this.synth = null
+    this.sampleInstrument?.dispose()
+    this.sampleInstrument = null
     this.distortion?.dispose()
     this.distortion = null
     this.chorus?.dispose()
@@ -259,6 +299,7 @@ export class AudioEngine {
     this.distortion = new DistortionEffect(context, this.chorus.input)
     this.distortion.setWet(this.distortionWet)
     this.synth = new PolySynth(context, this.distortion.input, this.activeInstrument)
+    this.sampleInstrument = new SampleInstrument(context, this.distortion.input)
     context.onstatechange = () => this.updateStatusFromContext()
   }
 

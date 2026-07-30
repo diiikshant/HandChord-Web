@@ -9,6 +9,13 @@
 - **Start Camera** requests video permission only.
 - Microphone permission is never requested.
 
+## Desktop development layout
+
+- At a common laptop width (at least 1040 px), confirm the live camera preview and Gesture Audio status remain visible in the left column while you scroll the **Controls & diagnostics** panel on the right.
+- Open and close **Movement & calibration**, **Four movement effects**, **Sounds & Audio Test**, and **Tracking & finger diagnostics**. Confirm each group reveals the same controls and no camera, tracking, or audio state is reset.
+- Resize below the desktop breakpoint. Confirm the view safely becomes a single-column layout, with all controls still reachable and no horizontal overflow.
+- While the camera is active, scroll, expand, and collapse development groups. Confirm the camera LED and preview remain active, hand tracking continues, and Chrome shows no console errors.
+
 ## Finger-state recognition
 
 - Test a fist and confirm raw count 0 and stable gesture **fist**.
@@ -88,6 +95,29 @@
 - Move the manual master-volume slider with every instrument. Confirm it remains the only output-level control, transitions do not cause extreme loudness jumps, and the fixed performance gain remains 100%.
 - Refresh the page after choosing an instrument. Confirm the selection returns. Set an invalid saved instrument value through browser storage only if comfortable, refresh, and confirm Warm Pad is restored safely.
 - Test speakers and headphones. Confirm no clipping, microphone request, red Chrome console errors, or duplicate/stuck voices.
+
+## Personal audio import and sample instruments
+
+- Enable Audio, select **Add Personal Sound**, then import a short WAV file. Repeat with MP3 and any browser-supported M4A/AAC or OGG file.
+- Try an unsupported file, an empty file, a file over 12 MB, and audio longer than 10 seconds. Confirm a clear error appears and no sound is saved.
+- In the editor, test waveform display, preview/stop, trim start/end, 15 ms fades, normalisation, reverse, root note selection, and Save/Cancel. Confirm preview and saved playback use only the selected trim region.
+- Save an Instrument-mode sound with Loop Sample on. Test button-controlled and gesture-controlled chords; confirm individual chord notes pitch-shift from the selected root note, loop only inside the trim range, release on Stop/chord change/source change, and never leave stuck voices.
+- Save a One-shot sound. Repeat the same chord action several times; confirm it triggers at original pitch without looping or reusing an old source node.
+- Test every personal sound with reverb, distortion, tape delay, inward chorus, and manual master volume. Confirm all four movement controls and calibration remain unchanged.
+- Select a built-in instrument, then a personal sound, then a built-in sound again. Confirm each release is clean and the effect graph/tracking remain live.
+- Test Rename, Edit, Duplicate, Delete, and deletion of the active sound. Confirm active deletion returns to Warm Pad and removes local stored audio data.
+- Refresh and restart Chrome. Confirm saved sounds remain. Temporarily simulate missing saved audio data only if comfortable; confirm the app gives a recovery message rather than crashing.
+- Confirm the browser makes no network upload, no microphone request, and no red console errors. Test speakers and headphones for clipping and pitch-shifting quality.
+
+## Instrument sample looping
+
+- Import or edit an Instrument-mode personal sound. Confirm **Loop Sample** is off by default, the sample plays once from trim start to trim end, and an audio file that ends while a chord is held becomes silent.
+- Enable **Loop Sample**. Confirm the editor says the trimmed region repeats while the chord is playing, shows the trim range and 30 ms debug edge fade, and refuses a trimmed loop shorter than 120 ms.
+- Test a short sustained sample, a long sample, a trimmed sample, and a reversed sample. Confirm every pitched chord voice repeats only its selected trim region and retains root-note pitch shifting.
+- Change chords while looping, then use Stop, both-fist stop, Gesture Audio off, built-in instrument selection, personal-sound selection, and a browser-tab switch. Confirm every old loop fades out and no loop continues afterward.
+- Switch an enabled looping sound to One-shot mode. Confirm the loop control is hidden, the saved one-shot never loops, and it keeps original pitch.
+- Edit and reopen a saved looping sound, refresh the page, restart Chrome, duplicate the sound, and delete it. Confirm valid loop settings persist, duplicates retain them, older saved sounds remain usable, and deleting an active sound stops it safely.
+- Leave a looping chord active for several minutes while observing Chrome. Confirm voice count does not increase, CPU/memory do not keep climbing, all four movement effects still work, and Chrome has no console errors.
 
 ## Stable two-hand gesture chord control
 
