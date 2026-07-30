@@ -1,121 +1,79 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useEffect, useRef } from 'react'
+import { useCamera } from './hooks/useCamera'
 import './App.css'
 
+const messages = {
+  idle: 'Camera is not started. Nothing is being recorded.',
+  requesting: 'Requesting camera permission…',
+  active: 'Camera is active. Your preview is visible below.',
+  denied: 'Camera permission was denied. Allow camera access in Chrome, then try again.',
+  unavailable: 'No usable camera was found on this device.',
+  error: 'The camera could not start. Please try again.',
+}
+
 function App() {
-  const [count, setCount] = useState(0)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const { startCamera, status, stopCamera, stream } = useCamera()
+  const canTryAgain = status === 'denied' || status === 'unavailable' || status === 'error'
+
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.srcObject = stream
+    }
+  }, [stream])
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <main className="app-shell">
+      <section className="camera-card" aria-labelledby="app-title">
+        <p className="eyebrow">Desktop music sandbox</p>
+        <h1 id="app-title">HandChord</h1>
+        <p className="description">Create music using hand gestures</p>
 
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        <div className="camera-stage">
+          {status === 'active' ? (
+            <video
+              ref={videoRef}
+              className="camera-preview"
+              autoPlay
+              muted
+              playsInline
+              aria-label="Live mirrored webcam preview"
+            />
+          ) : (
+            <div className="camera-placeholder" aria-hidden="true">
+              <span>Camera preview</span>
+            </div>
+          )}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
+
+        <p className={`camera-status status-${status}`} aria-live="polite">
+          {messages[status]}
+        </p>
+
+        <div className="camera-actions">
+          {status !== 'active' && status !== 'requesting' && (
+            <button className="primary-button" type="button" onClick={() => void startCamera()}>
+              Start Camera
+            </button>
+          )}
+          {status === 'requesting' && (
+            <button className="primary-button" type="button" disabled>
+              Requesting Camera…
+            </button>
+          )}
+          {status === 'active' && (
+            <button className="secondary-button" type="button" onClick={stopCamera}>
+              Stop Camera
+            </button>
+          )}
+          {canTryAgain && (
+            <button className="primary-button" type="button" onClick={() => void startCamera()}>
+              Try Again
+            </button>
+          )}
         </div>
       </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
+    </main>
   )
 }
 
