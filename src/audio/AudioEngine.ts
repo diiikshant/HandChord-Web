@@ -24,6 +24,13 @@ export type InputLevelMeter = {
   dispose: () => void
 }
 
+/** The only shared routing exposed to session-only composition recording. */
+export type CompositionAudioRouting = {
+  context: AudioContext
+  recordingTap: AudioNode
+  monitoringOutput: AudioNode
+}
+
 type AudioContextConstructor = new () => AudioContext
 
 /** Keeps chord identity independent from browser audio nodes for predictable playback. */
@@ -52,6 +59,7 @@ export class AudioEngine {
   private context: AudioContext | null = null
   private masterGain: GainNode | null = null
   private fixedPerformanceGain: GainNode | null = null
+  private performanceRecordingTap: GainNode | null = null
   private synth: PolySynth | null = null
   private sampleInstrument: SampleInstrument | null = null
   private distortion: DistortionEffect | null = null
@@ -132,6 +140,18 @@ export class AudioEngine {
   getActiveSoundSource() { return this.activeSoundSource }
   getSamplePlaybackRates() { return this.sampleInstrument?.playbackRates ?? [] }
   getSampleVoiceGroupDiagnostics() { return this.sampleInstrument?.voiceGroupDiagnostics ?? { groupCount: 0, memberVoiceCount: 0, looping: false, sharedDurationSeconds: null, startTime: null, releaseStartTime: null, stopTime: null, naturalVoiceDurations: [] } }
+
+  /**
+   * Resumes the existing context from a user action and exposes a tap after all
+   * performance effects but before manual volume and final output compression.
+   */
+  async getCompositionRouting(): Promise<CompositionAudioRouting> {
+    if (!this.context) await this.enable()
+    else if (this.context.state === 'suspended') await this.resume()
+    this.ensureReady()
+    if (!this.context || !this.performanceRecordingTap || !this.masterGain) throw new Error('The internal composition recording route is unavailable.')
+    return { context: this.context, recordingTap: this.performanceRecordingTap, monitoringOutput: this.masterGain }
+  }
 
   /** Creates analysis-only nodes in the existing AudioContext; it never connects microphone audio to speakers. */
   createInputLevelMeter(stream: MediaStream): InputLevelMeter {
@@ -275,6 +295,8 @@ export class AudioEngine {
     this.reverb = null
     this.fixedPerformanceGain?.disconnect()
     this.fixedPerformanceGain = null
+    this.performanceRecordingTap?.disconnect()
+    this.performanceRecordingTap = null
     this.masterGain?.disconnect()
     this.masterGain = null
     const context = this.context
@@ -303,6 +325,7 @@ export class AudioEngine {
     const context = new AudioContextClass()
     const masterGain = context.createGain()
     const fixedPerformanceGain = context.createGain()
+    const performanceRecordingTap = context.createGain()
     const compressor = context.createDynamicsCompressor()
     masterGain.gain.setValueAtTime(this.masterVolume, context.currentTime)
     compressor.threshold.setValueAtTime(-18, context.currentTime)
@@ -311,11 +334,15 @@ export class AudioEngine {
     compressor.attack.setValueAtTime(0.003, context.currentTime)
     compressor.release.setValueAtTime(0.25, context.currentTime)
     fixedPerformanceGain.gain.setValueAtTime(1, context.currentTime)
-    fixedPerformanceGain.connect(masterGain).connect(compressor).connect(context.destination)
+    // This tap is the internal performance capture point. It excludes the
+    // manual master gain and final compressor, and composition playback never
+    // connects back here.
+    fixedPerformanceGain.connect(performanceRecordingTap).connect(masterGain).connect(compressor).connect(context.destination)
 
     this.context = context
     this.masterGain = masterGain
     this.fixedPerformanceGain = fixedPerformanceGain
+    this.performanceRecordingTap = performanceRecordingTap
     this.reverb = new ReverbEffect(context, fixedPerformanceGain)
     this.reverb.setWet(this.reverbWet)
     this.tapeDelay = new TapeDelayEffect(context, this.reverb.input, this.tapeDelayParameters)

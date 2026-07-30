@@ -37,9 +37,11 @@ export class GestureAudioController {
   private activeGestureChordId: string | null = null
   private snapshot: GestureAudioSnapshot = INITIAL_SNAPSHOT
   private readonly audio: GestureAudioPort
+  private readonly onEmergencyStop: (() => void) | undefined
 
-  constructor(audio: GestureAudioPort) {
+  constructor(audio: GestureAudioPort, onEmergencyStop?: () => void) {
     this.audio = audio
+    this.onEmergencyStop = onEmergencyStop
   }
 
   setEnabled(enabled: boolean) {
@@ -127,6 +129,7 @@ export class GestureAudioController {
     const activeAudioId = this.audio.getSnapshot().activeChordId
     if (this.activeGestureChordId && activeAudioId === `gesture-${this.activeGestureChordId}`) {
       this.audio.stop()
+      this.onEmergencyStop?.()
     }
     this.activeGestureChordId = null
   }

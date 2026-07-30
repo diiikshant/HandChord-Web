@@ -608,6 +608,29 @@ button:disabled {
   line-height: 1;
 }
 
+.composition-countdown,
+.composition-recording {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  margin-top: 18px;
+  padding: 18px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-heading);
+  background: color-mix(in srgb, var(--debug-background) 76%, #000);
+}
+
+.composition-countdown strong {
+  color: var(--accent);
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+.composition-recording strong {
+  color: var(--error);
+}
+
 .recording-live > div:first-child {
   display: flex;
   justify-content: space-between;

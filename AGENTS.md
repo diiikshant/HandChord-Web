@@ -23,3 +23,7 @@ These are the permanent rules for this project:
 - All microphone tracks and analysis nodes must be explicitly cleaned up after recording, cancellation, error, page hiding, or unmount.
 - Notes in one sampled chord must use shared AudioContext scheduling and the final clamped playback rate when calculating their duration.
 - Manage sampled chord voices as one group so their release, stop, disconnect, and cleanup cannot drift apart.
+- Musical transport scheduling must use AudioContext time and exact sample-frame ranges; visual timers must never be the timing source of truth.
+- Internal composition recording must exclude the metronome, manual master gain, final compressor, and composition-loop playback.
+- Register the composition AudioWorklet once per AudioContext, and never route loop playback back into the performance recording tap.
+- Composition transport changes must follow its explicit state model, and every loop playback AudioBufferSourceNode must receive explicit stop and cleanup.

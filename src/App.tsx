@@ -11,6 +11,7 @@ import { ChorusControl } from './components/ChorusControl'
 import { TapeDelayControl } from './components/TapeDelayControl'
 import { InstrumentSelector } from './components/InstrumentSelector'
 import { PersonalSounds } from './components/PersonalSounds'
+import { CompositionLoop } from './components/CompositionLoop'
 import { useCamera } from './hooks/useCamera'
 import { useFingerRecognition } from './hooks/useFingerRecognition'
 import { useHandTracking } from './hooks/useHandTracking'
@@ -22,6 +23,7 @@ import { useDistortionControl } from './hooks/useDistortionControl'
 import { useChorusControl } from './hooks/useChorusControl'
 import { useTapeDelayControl } from './hooks/useTapeDelayControl'
 import { useInstrumentSelection } from './hooks/useInstrumentSelection'
+import { useCompositionLoop } from './hooks/useCompositionLoop'
 import type { InstrumentId } from './audio/instruments/instrumentTypes'
 import type { RootKey, ScaleName } from './music/MusicTheoryEngine'
 import type { CanvasDimensions } from './tracking/handTrackingTypes'
@@ -50,6 +52,7 @@ function App() {
   const recognitions = useFingerRecognition(hands)
   const movement = useMovementTracking(hands)
   const { engine, audio } = useAudioEngine()
+  const { transport, composition } = useCompositionLoop(engine)
   const reverb = useReverbControl(engine, movement)
   const distortion = useDistortionControl(engine, movement)
   const chorus = useChorusControl(engine, movement)
@@ -59,7 +62,7 @@ function App() {
     gestureAudio,
     setGestureAudioEnabled,
     releaseGestureAudioOwnership,
-  } = useGestureAudio({ engine, recognitions, liveHandCount: hands.length, root, scale })
+  } = useGestureAudio({ engine, recognitions, liveHandCount: hands.length, root, scale, onEmergencyStop: () => transport.stopLoop() })
   const [canvasDimensions, setCanvasDimensions] = useState<CanvasDimensions>({
     width: 0,
     height: 0,
@@ -88,13 +91,14 @@ function App() {
   useEffect(() => {
     const releaseAudioWhenHidden = () => {
       if (document.hidden) {
+        transport.cancelRecording('Recording cancelled because the page was hidden. Any previous loop was kept.')
         engine.stop()
         releaseGestureAudioOwnership()
       }
     }
     document.addEventListener('visibilitychange', releaseAudioWhenHidden)
     return () => document.removeEventListener('visibilitychange', releaseAudioWhenHidden)
-  }, [engine, releaseGestureAudioOwnership])
+  }, [engine, releaseGestureAudioOwnership, transport])
 
   return (
     <main className="app-shell">
@@ -238,6 +242,13 @@ function App() {
                   activeVoiceCount={engine.getActiveVoiceCount()}
                   onInstrumentChange={selectInstrument}
                 />
+              </div>
+            </details>
+
+            <details className="developer-group" open>
+              <summary>Composition Loop</summary>
+              <div className="developer-group-content">
+                <CompositionLoop transport={transport} composition={composition} />
               </div>
             </details>
 

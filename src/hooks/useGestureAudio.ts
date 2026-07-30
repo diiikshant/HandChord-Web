@@ -10,6 +10,7 @@ type GestureAudioInputs = {
   liveHandCount: number
   root: RootKey
   scale: ScaleName
+  onEmergencyStop?: () => void
 }
 
 const INITIAL_GESTURE_AUDIO: GestureAudioSnapshot = {
@@ -35,13 +36,13 @@ function snapshotsMatch(a: GestureAudioSnapshot, b: GestureAudioSnapshot) {
 }
 
 /** Runs gesture-to-audio decisions outside the MediaPipe rendering loop. */
-export function useGestureAudio({ engine, recognitions, liveHandCount, root, scale }: GestureAudioInputs) {
+export function useGestureAudio({ engine, recognitions, liveHandCount, root, scale, onEmergencyStop }: GestureAudioInputs) {
   const controllerRef = useRef<GestureAudioController | null>(null)
   const inputsRef = useRef({ recognitions, liveHandCount, root, scale })
   const [snapshot, setSnapshot] = useState<GestureAudioSnapshot>(INITIAL_GESTURE_AUDIO)
 
   if (!controllerRef.current) {
-    controllerRef.current = new GestureAudioController(engine)
+    controllerRef.current = new GestureAudioController(engine, onEmergencyStop)
   }
   const controller = controllerRef.current
   inputsRef.current = { recognitions, liveHandCount, root, scale }

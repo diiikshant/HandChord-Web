@@ -211,3 +211,16 @@
 - Test rapid chord changes and repeated unchanged gesture chords. Confirm old groups release cleanly, an unchanged chord does not create duplicates, and active group/member diagnostics return to zero after release.
 - Verify button-controlled and gesture-controlled personal sample chords, plus built-in instruments and One-shot sounds. Built-in behaviour and One-shot original-pitch triggering must remain unchanged.
 - Confirm no stuck notes, no visibly or audibly different note endings, and no red Chrome console errors.
+
+## Composition loop recording
+
+- Enable Audio and test 40, 100, and 220 BPM with 1-, 2-, 4-, and 8-bar loops. Confirm the displayed duration matches 4/4 timing and recording stops automatically at the exact final bar boundary.
+- Test Count-in Off, 1 bar, and 2 bars. Confirm the large 4/3/2/1 display, remaining-bar indicator, beat-one accent, and Cancel Count-in. Music played during count-in must not enter the saved loop.
+- Test Metronome On and Off, including its level control. Confirm it is audible independently, remains dry, and is absent from loop playback.
+- Record using a built-in instrument, imported sample, microphone-recorded personal sound, and looping sample instrument. Test gesture chords, button chords, reverb, distortion, chorus, and tape delay; all performance effects should be recorded.
+- Confirm manual master-volume changes and the final compressor affect monitoring only, not the saved recording level. Confirm an existing loop is not captured into a replacement loop.
+- After capture, test Play, Stop, Replay, live performance over the loop, and both-fist emergency stop. Confirm replay creates no duplicate playback source and live performance does not alter the saved loop.
+- Test Re-record, a failed/cancelled replacement, Clear, and one-level Undo. A failed replacement must keep the old loop. Refresh the page and confirm the session loop disappears while Personal Sounds remain.
+- Test short boundary clicks, long reverb tails, and high tape-delay feedback. The loop remains exact duration; tails outside selected bars are intentionally not captured and may make the boundary noticeable.
+- Hide the page during count-in or recording. Confirm capture cancels safely and any previous loop remains. Temporary hand-tracking loss must not stop transport playback. Check speakers, headphones, CPU/memory after repeated records, and Chrome console for errors.
+- Known issue: some pitched sampled chords may still have imperfectly equal audible note durations. This remains a separate unresolved issue and must not regress during loop testing.

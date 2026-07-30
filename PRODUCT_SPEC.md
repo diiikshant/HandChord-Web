@@ -140,3 +140,15 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - A looping sampled chord sustains while held, then every looping member receives the same release and stop timing when the chord changes or stops.
 - One-shot sounds remain single original-pitch triggers and do not use sampled-chord timing.
 - Independent pitch-and-time stretching is out of scope; a lower pitched non-looping note may be intentionally shortened to match the shortest higher note.
+
+## Composition loop recording
+
+- Users can record one internal HandChord performance loop. It captures chords, the selected built-in or personal instrument, and gesture-controlled distortion, chorus, tape delay, and reverb. It does not capture room microphone audio.
+- Initial transport is 4/4 only, with tempo from 40 to 220 BPM (default 100 BPM), and loop lengths of 1, 2, 4, or 8 bars (default 4 bars).
+- Count-in supports Off, 1 bar, or 2 bars (default 1 bar). The native metronome can be enabled during count-in and recording, emphasises beat one, and is never included in the recorded loop.
+- Loop recording takes the performance signal after effects and fixed performance gain, but before manual master volume and final compression. Manual volume and final compression remain nondestructive output controls.
+- Exact loop length is measured in AudioContext sample frames. The saved AudioBuffer is always trimmed or silence-padded to the selected musical frame count.
+- A recorded loop plays continuously from its exact start through its exact selected duration. Live performance may continue over it, but neither live playing nor loop playback creates an extra layer or feeds back into recording.
+- Re-record replaces a loop only after a successful capture; Clear and successful replacement support one in-memory Undo. Composition loops are session-only and disappear on page refresh. Personal Sounds continue to persist separately.
+- Both-fist Stop releases live voices and stops loop playback for an intuitive emergency stop, but never deletes the loop.
+- Overdubbing, multiple layers, project saving, export, timeline editing, and arrangement remain out of scope. Vocal Track Recording remains a later dedicated feature after composition loops, layer management, and project saving.
