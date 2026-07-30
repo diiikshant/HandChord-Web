@@ -61,3 +61,14 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - Both anatomical hands showing stable fists for 500 ms stops the current gesture-controlled chord. One fist alone does not stop playback. If both hands are missing for 850 ms, the gesture-controlled chord begins its safe smooth release. Brief unclear tracking retains the last stable role for 650 ms and the current chord for up to 900 ms.
 - The live camera panel has a Gesture Audio toggle. Turning it off releases a gesture-controlled chord cleanly but leaves camera tracking and the button-based Audio Test working.
 - Gesture control remains separate from movement-controlled effects, calibration, sampling, looping, recording, and composition features.
+
+## Four-axis movement calibration diagnostics
+
+- The final control model is: anatomical left vertical = reverb, anatomical left horizontal = distortion, anatomical right vertical = internal performance volume, and anatomical right horizontal = chorus. This milestone displays calibrated values only; no audio effect or volume parameter is connected.
+- Palm position is the average of wrist, index MCP, middle MCP, ring MCP, and little MCP. Anatomical handedness owns the controls; screen location never permanently assigns a hand role.
+- Mirroring is applied once to movement coordinates. In the visible selfie preview, moving left lowers horizontal value, moving right raises it, moving down lowers vertical value, and moving up raises it.
+- One shared calibration profile contains four independent ranges: `leftVertical`, `leftHorizontal`, `rightVertical`, and `rightHorizontal`. Each range has minimum, maximum, validity, and update time. Updating, clearing, or recalibrating one range preserves the other three.
+- Guided calibration captures lower, upper, visual-left, and visual-right positions for each intended anatomical hand. It samples for about 700 ms and stores a median only when the required hand is present, resolved, confident, and has a sufficiently wide range.
+- Calibration is persisted locally in browser localStorage. Missing or invalid saved data is ignored safely; Reset All clears all four ranges.
+- A calibrated axis maps lower/left to 0, upper/right to 1, and midpoint to approximately 0.5, clamping outside values. Values use a 5% dead zone and exponential smoothing. Losing one hand retains its last safe value for 500 ms without disabling the other hand.
+- Movement never retriggers chords, changes finger gestures, or changes the audio graph during this milestone.

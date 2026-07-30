@@ -346,6 +346,89 @@ button:disabled {
   text-transform: capitalize;
 }
 
+.movement-panel,
+.calibration-panel {
+  margin-top: 32px;
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--debug-background) 82%, #000);
+}
+
+.movement-panel h2,
+.calibration-panel h2,
+.movement-card h3 {
+  margin: 0;
+  color: var(--text-heading);
+}
+
+.movement-panel > p,
+.calibration-panel > p,
+.movement-card > p {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.movement-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+}
+
+.movement-card,
+.calibration-step {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--debug-background) 72%, #000);
+}
+
+.movement-card dl,
+.calibration-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin: 16px 0 0;
+}
+
+.movement-card dt,
+.calibration-summary dt {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
+.movement-card dd,
+.calibration-summary dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--text-heading);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+}
+
+.calibration-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+}
+
+.calibration-actions .secondary-button {
+  min-width: auto;
+  padding: 10px 14px;
+}
+
+.calibration-step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 18px;
+  color: var(--text-heading);
+}
+
 .audio-test {
   margin-top: 32px;
   padding-top: 32px;
@@ -508,6 +591,14 @@ button:disabled {
   .audio-readout,
   .gesture-audio-readout {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .movement-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .calibration-step {
+    display: grid;
   }
 
   .audio-test-heading {

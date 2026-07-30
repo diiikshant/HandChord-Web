@@ -3,11 +3,14 @@ import { HandOverlay } from './components/HandOverlay'
 import { AudioTest } from './components/AudioTest'
 import { FingerRecognitionPanel } from './components/FingerRecognitionPanel'
 import { GestureDiagnostics } from './components/GestureDiagnostics'
+import { MovementDiagnostics } from './components/MovementDiagnostics'
+import { CalibrationView } from './components/CalibrationView'
 import { useCamera } from './hooks/useCamera'
 import { useFingerRecognition } from './hooks/useFingerRecognition'
 import { useHandTracking } from './hooks/useHandTracking'
 import { useAudioEngine } from './hooks/useAudioEngine'
 import { useGestureAudio } from './hooks/useGestureAudio'
+import { useMovementTracking } from './hooks/useMovementTracking'
 import type { RootKey, ScaleName } from './music/MusicTheoryEngine'
 import type { CanvasDimensions } from './tracking/handTrackingTypes'
 import './App.css'
@@ -32,6 +35,7 @@ function App() {
     cameraStatus === 'active',
   )
   const recognitions = useFingerRecognition(hands)
+  const movement = useMovementTracking(hands)
   const { engine, audio } = useAudioEngine()
   const {
     gestureAudio,
@@ -160,6 +164,9 @@ function App() {
             <div><dt>Current notes</dt><dd>{gestureAudio.chord?.noteNames.join(', ') ?? 'None'}</dd></div>
           </dl>
         </section>
+
+        <MovementDiagnostics movement={movement} />
+        <CalibrationView movement={movement} />
 
         <aside className="debug-panel" aria-label="Hand tracking diagnostics">
           <div className="debug-heading">

@@ -91,3 +91,17 @@
 - Cross the hands in the camera view. Confirm anatomical left still chooses the position and anatomical right still chooses the bank.
 - Turn Gesture Audio off while it is playing. Confirm its chord releases, camera tracking continues, and the Audio Test buttons still play their chords.
 - Confirm there are no stuck notes, clicks, clipping, microphone requests, or red Chrome console errors.
+
+## Four-axis movement calibration diagnostics
+
+- Complete all eight guided steps: left lower/upper/visual-left/visual-right, then right lower/upper/visual-left/visual-right. Hold each requested position still until capture completes.
+- After each completed axis, inspect the calibration summary. Confirm only that named range becomes Ready and previously calibrated ranges remain Ready.
+- Test left-hand vertical and horizontal separately. Confirm left/down approaches 0, right/up approaches 1 in the matching diagnostic values.
+- Test right-hand vertical and horizontal separately with the same mirrored visible-direction behaviour.
+- Move both hands at once. Confirm both meters continue updating independently.
+- Use each individual axis recalibration action, then each hand recalibration action, and finally Reset All. Confirm only the advertised ranges are cleared.
+- Refresh the page and restart Chrome. Confirm valid calibration ranges remain available. Confirm malformed or missing browser storage does not crash the app.
+- Hide one hand briefly, then longer than 500 ms. Its value should remain safe while the other hand continues; the panel should report retention, then temporary unavailability.
+- Cross hands in view. Confirm anatomical roles remain associated with their own movement controls.
+- While holding a gesture-controlled chord, move both hands. Confirm no chord retriggers or changes because of movement.
+- Confirm the visible left/right and up/down direction matches the diagnostic values, and that Chrome has no console errors.
