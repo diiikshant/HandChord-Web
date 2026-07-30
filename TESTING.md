@@ -1,7 +1,9 @@
 # Testing Checklist
 
-- App installs successfully.
+- Dependencies install successfully.
 - Development server starts.
 - Starter page opens in Chrome.
-- No console errors.
-- No camera or microphone permission is requested.
+- Production build succeeds.
+- Browser console has no errors.
+- Camera permission is not requested.
+- Microphone permission is not requested.

@@ -1,5 +1,6 @@
 # Project Notes
 
-- Current milestone: web project setup
-- Working: nothing yet
-- Next task: run the starter app in Chrome
+- Current milestone: Web project setup
+- Working: Nothing confirmed yet
+- Next task: Run the starter app in Chrome
+- Known issues: None
