@@ -72,3 +72,12 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - Calibration is persisted locally in browser localStorage. Missing or invalid saved data is ignored safely; Reset All clears all four ranges.
 - A calibrated axis maps lower/left to 0, upper/right to 1, and midpoint to approximately 0.5, clamping outside values. Values use a 5% dead zone and exponential smoothing. Losing one hand retains its last safe value for 500 ms without disabling the other hand.
 - Movement never retriggers chords, changes finger gestures, or changes the audio graph during this milestone.
+
+## Left-hand vertical reverb control
+
+- Anatomical left-hand vertical movement now controls reverb only. Lower calibrated position is nearly dry; upper calibrated position becomes wide and ambient. Left horizontal, right vertical, and right horizontal remain disconnected from audio during this milestone.
+- The response is curved: the normalised leftVertical value is squared and maps from 0% to 95% wet. This leaves the lower range controllable while making the upper range substantially more ambient.
+- The native Web Audio graph is: polyphonic synth → dry path and reverb send → locally generated stereo ConvolverNode → wet gain → existing master gain → DynamicsCompressorNode → audio destination. The reverb graph is built once in the existing AudioContext.
+- The generated local impulse response has an approximately 6-second decay with channel variation for stereo width. Wet and dry gain changes use smooth targets that settle in roughly 300 ms, avoiding per-frame jumps and loudness surges.
+- Reverb Control requires a valid leftVertical calibration. If missing or disabled, it safely uses 10% wet and displays **Reverb calibration required** when applicable. Temporary left-hand loss preserves the last safe reverb setting and never stops chord playback.
+- Reverb movement does not retrigger chords, change chord latching, alter finger recognition, or affect the primary/secondary banks or both-fist stop.

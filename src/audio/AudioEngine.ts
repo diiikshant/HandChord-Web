@@ -1,4 +1,5 @@
 import { PolySynth } from './PolySynth.ts'
+import { ReverbEffect } from './ReverbEffect.ts'
 
 export type AudioStatus = 'disabled' | 'starting' | 'ready' | 'suspended' | 'error'
 
@@ -37,6 +38,8 @@ export class AudioEngine {
   private context: AudioContext | null = null
   private masterGain: GainNode | null = null
   private synth: PolySynth | null = null
+  private reverb: ReverbEffect | null = null
+  private reverbWet = 0.1
   private status: AudioStatus = 'disabled'
   private error: string | null = null
   private masterVolume = 0.3
@@ -97,6 +100,13 @@ export class AudioEngine {
     }
   }
 
+  setReverbWet(wet: number) {
+    this.reverbWet = Math.min(1, Math.max(0, wet))
+    this.reverb?.setWet(this.reverbWet)
+  }
+
+  getReverbWet() { return this.reverbWet }
+
   playChord(chordId: string, midiNotes: number[]) {
     this.ensureReady()
     if (!this.playback.trigger(chordId)) {
@@ -137,6 +147,8 @@ export class AudioEngine {
     this.stop()
     this.synth?.dispose()
     this.synth = null
+    this.reverb?.dispose()
+    this.reverb = null
     this.masterGain?.disconnect()
     this.masterGain = null
     const context = this.context
@@ -175,7 +187,9 @@ export class AudioEngine {
 
     this.context = context
     this.masterGain = masterGain
-    this.synth = new PolySynth(context, masterGain)
+    this.reverb = new ReverbEffect(context, masterGain)
+    this.reverb.setWet(this.reverbWet)
+    this.synth = new PolySynth(context, this.reverb.input)
     context.onstatechange = () => this.updateStatusFromContext()
   }
 

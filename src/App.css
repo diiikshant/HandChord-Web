@@ -347,7 +347,8 @@ button:disabled {
 }
 
 .movement-panel,
-.calibration-panel {
+.calibration-panel,
+.reverb-panel {
   margin-top: 32px;
   padding: 20px;
   border: 1px solid var(--border);

@@ -105,3 +105,15 @@
 - Cross hands in view. Confirm anatomical roles remain associated with their own movement controls.
 - While holding a gesture-controlled chord, move both hands. Confirm no chord retriggers or changes because of movement.
 - Confirm the visible left/right and up/down direction matches the diagnostic values, and that Chrome has no console errors.
+
+## Left-hand vertical reverb control
+
+- Calibrate leftVertical, enable audio, then enable **Reverb Control**. At the lower position, confirm the chord is nearly dry.
+- Move the left hand slowly to the midpoint. Confirm a moderate reverb amount and no sudden gain jump.
+- Move to the upper calibrated position. Confirm a wide, long ambient reverb while the dry chord remains understandable.
+- Move upward and downward slowly, then quickly. Confirm the wetness follows smoothly rather than stepping or clicking.
+- Play both button-controlled and gesture-controlled chords. Confirm the same reverb control applies and movement never retriggers the chord.
+- Stop a chord at a high setting. Confirm the reverb tail continues naturally without clipping or a large loudness surge.
+- Briefly hide the left hand, then keep it hidden. Confirm the last reverb amount stays safe and the panel reports temporary unavailability without stopping audio.
+- Turn Reverb Control off. Confirm it returns smoothly to its 10% default while chords and tracking continue.
+- Refresh the page, test desktop speakers and headphones, and confirm no console errors.
