@@ -7,13 +7,19 @@
 }
 
 .camera-card {
-  width: min(100%, 860px);
+  width: min(100%, 980px);
   padding: 48px;
   border: 1px solid var(--border);
   border-radius: 24px;
   background: var(--card-background);
   box-shadow: var(--card-shadow);
-  text-align: center;
+}
+
+.heading-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
 }
 
 .eyebrow {
@@ -39,25 +45,58 @@ h1 {
   font-size: 1.2rem;
 }
 
+.model-badge,
+.tracking-status {
+  margin: 0;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.model-ready,
+.tracking-one-hand,
+.tracking-two-hands {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border));
+}
+
+.model-error,
+.tracking-error {
+  color: var(--error);
+  border-color: color-mix(in srgb, var(--error) 45%, var(--border));
+}
+
 .camera-stage {
+  position: relative;
   aspect-ratio: 16 / 9;
   overflow: hidden;
   border: 1px solid var(--border);
   border-radius: 16px;
-  background: #11131b;
+  background: #090a0f;
 }
 
 .camera-preview,
-.camera-placeholder {
+.camera-placeholder,
+.hand-overlay {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
 }
 
 .camera-preview {
   display: block;
-  object-fit: cover;
-  /* Mirror the preview so moving left feels like a normal selfie view. */
+  object-fit: contain;
+  /* Mirror the preview once, like a normal selfie camera. */
   transform: scaleX(-1);
+}
+
+.hand-overlay {
+  pointer-events: none;
 }
 
 .camera-placeholder {
@@ -71,6 +110,7 @@ h1 {
   min-height: 1.5em;
   margin: 24px 0;
   color: var(--text-muted);
+  text-align: center;
 }
 
 .status-denied,
@@ -129,6 +169,48 @@ button:disabled {
   opacity: 0.7;
 }
 
+.debug-panel {
+  margin-top: 32px;
+  padding: 18px 20px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--debug-background);
+}
+
+.debug-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: var(--text-heading);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.debug-panel dl {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 18px 0 0;
+}
+
+.debug-panel dl > div {
+  min-width: 0;
+}
+
+.debug-panel dt {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+}
+
+.debug-panel dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--text-heading);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+}
+
 @media (max-width: 720px) {
   .app-shell {
     padding: 24px;
@@ -136,5 +218,18 @@ button:disabled {
 
   .camera-card {
     padding: 32px 24px;
+  }
+
+  .heading-row {
+    display: block;
+  }
+
+  .model-badge {
+    display: inline-block;
+    margin-bottom: 24px;
+  }
+
+  .debug-panel dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

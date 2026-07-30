@@ -17,3 +17,17 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - The interface clearly shows camera-not-started, permission-requesting, active, denied, unavailable, and error states.
 - Users can stop an active camera. Active media tracks must also stop when the camera experience unmounts or the page is left.
 - After it is stopped, the camera does not restart unless the user selects a camera button again.
+- The camera stream remains active independently of model loading, model-ready transitions, tracking state, diagnostics, and React rerenders.
+- The camera becomes active only after the stable video element has accepted `srcObject`, loaded metadata, and resolved `video.play()`.
+- `useCamera` has explicit ownership of the stream and may stop it only for an explicit user stop, genuine component unmount, intentional replacement, or failed startup.
+- The video element remains mounted while requesting permission and while model or tracking states change.
+- MediaPipe may read the active video but must never stop, detach, or replace the camera stream.
+
+## Hand landmark tracking
+
+- MediaPipe Hand Landmarker from the official `@mediapipe/tasks-vision` package provides browser hand tracking.
+- Up to two hands can be detected at once. For each hand, the app processes 21 landmarks, handedness, and handedness confidence locally in the browser.
+- The camera video and landmark canvas overlay must remain aligned for the same visible `contain` area, including letterboxing, browser resizing, and device pixel ratio.
+- The video preview and overlay are mirrored exactly once so the skeleton follows the mirrored selfie view.
+- Tracking processes at most one current frame at a time and skips unchanged frames so stale camera frames do not accumulate.
+- Finger counting, gesture recognition, chord mapping, and audio are outside this milestone.

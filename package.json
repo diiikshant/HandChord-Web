@@ -7,10 +7,11 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node --test src/hooks/cameraState.test.ts",
+    "test": "node --test src/hooks/cameraState.test.ts src/hooks/cameraLifecycle.test.ts src/tracking/overlayGeometry.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.0",
     "react": "^19.2.7",
     "react-dom": "^19.2.7"
   },

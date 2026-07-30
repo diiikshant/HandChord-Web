@@ -1,9 +1,21 @@
 # Project Notes
 
-- Current milestone: Desktop webcam preview
-- Working: Webcam preview implemented; automated camera-state tests and the production build pass.
-- Files and hooks added: `src/hooks/useCamera.ts`, `src/hooks/cameraState.ts`, and `src/hooks/cameraState.test.ts`.
-- Supported states: camera not started, permission requested, camera active, permission denied, camera unavailable, and camera error.
-- Known browser limitations: a camera must be available and permitted; camera access requires a secure page in production (or `localhost` during local development); the front-camera preference is only a preference and the browser may choose another camera.
-- Physical browser testing: Still pending in Chrome.
-- Next recommended task: Test the webcam preview in Chrome and confirm the permission, mirrored preview, and stop-camera behavior.
+- Current milestone: MediaPipe hand landmark tracking
+- Working: Desktop webcam preview is confirmed in Chrome. The webcam lifecycle repair, MediaPipe integration, deterministic tests, and the production build pass; physical Chrome lifecycle and tracking verification is still pending.
+- Exact root cause: React StrictMode's development effect rehearsal ran the old `useCamera` cleanup, which set `isMountedRef` to `false`. The effect setup did not restore it. When `getUserMedia()` later resolved, the hook treated the valid stream as obsolete and immediately called `track.stop()`, turning off the camera LED before a preview appeared.
+- Final camera ownership model: `useCamera` exclusively owns camera requests, the stable `CameraLifecycle` ref, stream cleanup, `video.srcObject`, metadata waiting, and `video.play()`. MediaPipe receives the active stream only for reading and never owns or stops it.
+- Stream lifecycle rules: only a user Stop Camera action, a genuine camera-component unmount, an intentionally replaced stream, or a failed startup can stop tracks. Each request has a generation ID, so an obsolete request cannot stop or change the state of a newer stream.
+- StrictMode behaviour: StrictMode remains enabled. Its setup-cleanup-setup rehearsal resets the lifecycle for the final mounted component without invalidating a later user-started camera stream.
+- Temporary diagnostics added: browser console messages prefixed with `[HandChord camera]` record requests, stream and track details, metadata, playback, track events, stream generation IDs, and every app-initiated stop reason.
+- MediaPipe dependency: Official `@mediapipe/tasks-vision` package.
+- Local model location: `public/models/hand_landmarker.task`.
+- Local MediaPipe runtime files: `public/mediapipe/wasm/`.
+- Files and hooks added: `src/tracking/handLandmarker.ts`, `src/tracking/handTrackingTypes.ts`, `src/tracking/overlayGeometry.ts`, `src/tracking/overlayGeometry.test.ts`, `src/hooks/useHandTracking.ts`, and `src/components/HandOverlay.tsx`.
+- Maximum detected hands: 2.
+- Initial inference-frame limit: approximately 18 frames per second, with unchanged video frames skipped and only one synchronous inference allowed at a time.
+- Overlay approach: an absolutely positioned canvas shares the camera stage with the `object-fit: contain` video. Contain sizing, letterboxing, canvas pixel ratio, and one horizontal mirror conversion are applied consistently so the skeleton follows the selfie preview.
+- Supported camera states: camera not started, permission requested, camera active, permission denied, camera unavailable, and camera error.
+- Supported tracking states: idle, waiting for video, no hands, one hand, two hands, and tracking error.
+- Known browser and performance limitations: tracking runs on the main browser thread for this milestone; lower-powered devices may run below the target rate. A camera must be available and permitted; deployed camera and model access require HTTPS (or `localhost` in development). The browser may choose a different camera despite the front-camera preference.
+- Physical Chrome testing: Still pending for the repaired camera lifecycle, landmark overlay alignment, and two-hand tracking.
+- Next recommended task: Confirm in desktop Chrome that the camera LED stays on, the preview appears, and model changes never stop the stream before continuing gesture work.
