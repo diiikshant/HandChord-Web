@@ -283,6 +283,140 @@ button:disabled {
   margin-top: 16px;
 }
 
+.audio-test {
+  margin-top: 32px;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
+.audio-test-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.audio-test h2 {
+  margin: 0;
+  color: var(--text-heading);
+  font-size: 2rem;
+}
+
+.audio-test-heading p:not(.eyebrow),
+.audio-message,
+.audio-error {
+  margin: 10px 0 0;
+  color: var(--text-muted);
+}
+
+.audio-error {
+  color: var(--error);
+}
+
+.audio-status {
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.audio-ready {
+  color: var(--success);
+  border-color: color-mix(in srgb, var(--success) 45%, var(--border));
+}
+
+.audio-error,
+.audio-suspended {
+  color: var(--error);
+}
+
+.audio-actions,
+.chord-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.audio-controls {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.audio-controls label {
+  display: grid;
+  gap: 8px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.audio-controls select,
+.audio-controls input {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.audio-controls select {
+  min-height: 42px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-heading);
+  background: var(--debug-background);
+  font: inherit;
+}
+
+.chord-button {
+  min-width: 64px;
+  min-height: 48px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-heading);
+  background: var(--debug-background);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chord-button:hover:not(:disabled) {
+  background: var(--surface-hover);
+}
+
+.stop-button {
+  color: var(--error);
+}
+
+.audio-readout {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 24px 0 0;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--debug-background) 76%, #000);
+}
+
+.audio-readout dt {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+}
+
+.audio-readout dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--text-heading);
+  font-family: var(--mono);
+  font-size: 0.82rem;
+}
+
 @media (max-width: 720px) {
   .app-shell {
     padding: 24px;
@@ -306,7 +440,18 @@ button:disabled {
   }
 
   .finger-state-grid,
-  .recognition-summary {
+  .recognition-summary,
+  .audio-controls,
+  .audio-readout {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .audio-test-heading {
+    display: block;
+  }
+
+  .audio-status {
+    display: inline-block;
+    margin-top: 16px;
   }
 }

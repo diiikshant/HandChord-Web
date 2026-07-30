@@ -61,3 +61,18 @@
 - Test the production preview build and confirm the preview also appears there.
 - In the Chrome console, review `[HandChord camera]` diagnostics for request, stream, metadata, playback, track, generation, and explicit-stop events. There should be no red errors.
 - Microphone permission is never requested.
+
+## Standalone chord-audio test
+
+- Refresh the page and confirm there is no audio before selecting **Enable Audio**.
+- Select **Enable Audio**. Confirm the status becomes **ready** and the AudioContext state is `running`; no microphone permission is requested.
+- Select **Play Test Tone (A4)** and confirm a short 440 Hz tone plays.
+- In C Major, test I, ii, iii, IV, V, and vi. Confirm the readout shows C major, D minor, E minor, F major, G major, and A minor with their displayed note names and MIDI values.
+- Switch to A Natural Minor. Confirm i, ii°, III, iv, v, and VI show A minor, B diminished, C major, D minor, E minor, and F major.
+- Change root keys and scales while a chord sustains. The previous chord should release smoothly and the readout should reset until another button is selected.
+- Move the Master volume slider. Confirm it changes loudness without clicks, clipping, or stuck notes.
+- Select one chord, then another. Confirm the transition is smooth. Select the same chord repeatedly and confirm volume does not build up.
+- Select **Stop** and confirm the chord releases smoothly. Check that no sound continues afterward.
+- Switch to another browser tab while a chord is playing. Confirm it releases safely. Return and use **Resume Audio** if Chrome shows the audio state as suspended.
+- Refresh after using audio. Confirm a new explicit **Enable Audio** action is required.
+- Test through desktop speakers and headphones. Confirm no clicking, clipping, red console errors, or unexpected audio output.

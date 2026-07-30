@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node --test src/hooks/cameraState.test.ts src/hooks/cameraLifecycle.test.ts src/tracking/overlayGeometry.test.ts src/gestures/fingerClassifier.test.ts src/gestures/gestureStabiliser.test.ts",
+    "test": "node --test src/hooks/cameraState.test.ts src/hooks/cameraLifecycle.test.ts src/tracking/overlayGeometry.test.ts src/gestures/fingerClassifier.test.ts src/gestures/gestureStabiliser.test.ts src/music/MusicTheoryEngine.test.ts src/audio/AudioEngine.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {

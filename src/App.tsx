@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react'
 import { HandOverlay } from './components/HandOverlay'
+import { AudioTest } from './components/AudioTest'
 import { FingerRecognitionPanel } from './components/FingerRecognitionPanel'
 import { GestureDiagnostics } from './components/GestureDiagnostics'
 import { useCamera } from './hooks/useCamera'
@@ -145,6 +146,8 @@ function App() {
           <FingerRecognitionPanel recognitions={recognitions} />
           <GestureDiagnostics recognitions={recognitions} />
         </aside>
+
+        <AudioTest />
       </section>
     </main>
   )

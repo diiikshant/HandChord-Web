@@ -41,3 +41,13 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - A valid gesture must remain present for 200–300 ms before becoming stable. A stable gesture remains visible through up to 500 ms of unclear or temporarily missing frames.
 - A valid new pose that is still confirming is shown as **Hold…**. Low confidence, missing joints, unresolved handedness, and unsupported patterns show their specific rejection reason.
 - Finger recognition remains separate from audio, chord mapping, effects, and all composition features.
+
+## Standalone chord-audio test
+
+- Audio requires explicit user activation through **Enable Audio**. The app creates or resumes its AudioContext only after that action; no sound is created on page load.
+- The Audio Test supports all 12 chromatic root keys and Major or Natural Minor scales. Scales and diatonic triads are generated algorithmically from their interval patterns.
+- The first six degrees are available as buttons. In C major they are C major, D minor, E minor, F major, G major, and A minor. In A natural minor they are A minor, B diminished, C major, D minor, E minor, and F major.
+- The built-in synth is a warm polyphonic browser instrument: a triangle oscillator plus a quieter, slightly detuned sine oscillator for every note. It supports at least six simultaneous notes.
+- Selecting a chord sustains it. Selecting another chord releases the old chord smoothly before starting the new one. Selecting the same chord again does not stack duplicate notes. **Stop**, key/scale changes, page backgrounding, and leaving the Audio Test release active notes safely.
+- Audio runs through polyphonic voice gain envelopes, a conservative master gain, a DynamicsCompressorNode, and then the browser audio destination. Oscillators never connect directly to speakers without a gain envelope, and released nodes are stopped and disconnected.
+- The Audio Test remains separate from gesture control during this milestone. No hand state, gesture, movement, or camera event triggers sound yet.
