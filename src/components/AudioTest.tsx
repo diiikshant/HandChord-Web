@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { AudioEngine, AudioSnapshot } from '../audio/AudioEngine.ts'
 import type { InstrumentDefinition, InstrumentId } from '../audio/instruments/instrumentTypes.ts'
 import { InstrumentSelector } from './InstrumentSelector.tsx'
@@ -16,6 +16,7 @@ type AudioTestProps = {
   instrument: InstrumentDefinition
   activeVoiceCount: number
   onInstrumentChange: (id: InstrumentId) => void
+  masterVolume: number
 }
 
 const STATUS_COPY = {
@@ -38,9 +39,11 @@ function AudioTest({
   instrument,
   activeVoiceCount,
   onInstrumentChange,
+  masterVolume,
 }: AudioTestProps) {
-  const [volume, setVolume] = useState(1)
+  const [volume, setVolume] = useState(masterVolume)
   const [currentChord, setCurrentChord] = useState<DiatonicChord | null>(null)
+  useEffect(() => setVolume(masterVolume), [masterVolume])
 
   const stopForConfigurationChange = () => {
     engine.stop()

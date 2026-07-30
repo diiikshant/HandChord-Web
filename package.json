@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "test": "node --test src/hooks/cameraState.test.ts src/hooks/cameraLifecycle.test.ts src/tracking/overlayGeometry.test.ts src/gestures/fingerClassifier.test.ts src/gestures/gestureStabiliser.test.ts src/music/MusicTheoryEngine.test.ts src/audio/AudioEngine.test.ts src/audio/ReverbMapping.test.ts src/audio/DistortionMapping.test.ts src/audio/ChorusMapping.test.ts src/audio/TapeDelayMapping.test.ts src/audio/instruments/instrumentPresets.test.ts src/audio/sounds/sampleMath.test.ts src/recording/recordingMath.test.ts src/gestureAudio/GestureChordMapper.test.ts src/gestureAudio/ChordGestureStabiliser.test.ts src/movement/Movement.test.ts src/composition/transportMath.test.ts",
+    "test": "node --test src/hooks/cameraState.test.ts src/hooks/cameraLifecycle.test.ts src/tracking/overlayGeometry.test.ts src/gestures/fingerClassifier.test.ts src/gestures/gestureStabiliser.test.ts src/music/MusicTheoryEngine.test.ts src/audio/AudioEngine.test.ts src/audio/ReverbMapping.test.ts src/audio/DistortionMapping.test.ts src/audio/ChorusMapping.test.ts src/audio/TapeDelayMapping.test.ts src/audio/instruments/instrumentPresets.test.ts src/audio/sounds/sampleMath.test.ts src/recording/recordingMath.test.ts src/gestureAudio/GestureChordMapper.test.ts src/gestureAudio/ChordGestureStabiliser.test.ts src/movement/Movement.test.ts src/composition/transportMath.test.ts src/projects/projectModel.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {

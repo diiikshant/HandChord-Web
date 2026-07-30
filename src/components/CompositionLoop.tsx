@@ -46,7 +46,7 @@ export function CompositionLoop({ transport, composition }: Props) {
           <button className="secondary-button" type="button" disabled={isBusy} onClick={() => { transport.selectLayer(layer.id); void action(() => transport.replaceActiveLayer()) }}>Replace</button>
           <button className="secondary-button" type="button" disabled={isBusy} onClick={() => { if (window.confirm(`Delete ${layer.name}?`)) { transport.selectLayer(layer.id); transport.deleteActiveLayer() } }}>Delete</button>
         </div>
-        <small>{formatSeconds(layer.durationSeconds)} · {layer.sourceSoundType === 'built-in' ? 'Built-in instrument' : 'Personal sound'} · {new Date(layer.createdAt).toLocaleTimeString()}</small>
+        <small>{formatSeconds(layer.durationSeconds)} · {layer.sourceSoundType === 'built-in' ? 'Built-in instrument' : 'Personal sound'} · {composition.runtimeBufferIds.includes(layer.id) ? `frames ${layer.frameCount}` : 'Audio unavailable — delete or repair this layer before playback'} · {new Date(layer.createdAt).toLocaleTimeString()}</small>
       </article>)}
     </div>
     <dl className="effect-readout" aria-label="Composition layer diagnostics">

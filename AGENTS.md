@@ -30,3 +30,7 @@ These are the permanent rules for this project:
 - All layers in one composition must share the same timing definition and use one shared AudioContext playback start time.
 - Keep runtime composition AudioBuffers separate from serialisable layer metadata; existing layers must never be baked into a newly recorded layer.
 - Layer effects are baked during recording and layer playback must not pass through those effects a second time.
+- Store project audio in IndexedDB, never localStorage, and never serialise runtime Web Audio objects.
+- Never delete a previously valid saved project before its replacement save transaction succeeds.
+- Project schemas must be versioned and migrated explicitly; Personal Sounds and project audio have separate ownership.
+- Project loading must validate saved audio frame count and metadata. All project audio remains local unless a future feature explicitly adds upload.

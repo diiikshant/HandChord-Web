@@ -53,6 +53,13 @@ export type CompositionSession = {
   architectureVersion: 2
 }
 
+/** Runtime buffers deliberately live outside serialisable composition metadata. */
+export type CompositionRuntimeState = {
+  composition: CompositionSession | null
+  buffers: Map<string, AudioBuffer>
+  settings: CompositionSettings
+}
+
 export type TransportSchedule = {
   secondsPerBeat: number
   secondsPerBar: number
@@ -85,6 +92,7 @@ export type CompositionTransportSnapshot = {
   receivedFrameCount: number
   undoAction: UndoAction
   sourceGroupSize: number
+  persistenceRevision: number
   sharedPlaybackStartTime: number | null
   compositionBusActive: boolean
   audibleLayerIds: string[]

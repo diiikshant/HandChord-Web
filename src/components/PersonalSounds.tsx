@@ -7,11 +7,11 @@ import { SampleEditor, type SampleDraft } from './SampleEditor.tsx'
 import { RecordingPanel, type RecordedSample } from './RecordingPanel.tsx'
 
 type EditorState = { buffer: AudioBuffer; audioData: ArrayBuffer; draft: SampleDraft; editingId?: string; createdAt?: number }
-type Props = { engine: AudioEngine; onBeforeSourceChange: () => void }
+type Props = { engine: AudioEngine; onBeforeSourceChange: () => void; onSourceSelected?: () => void }
 
 function newId() { return typeof crypto !== 'undefined' && 'randomUUID' in crypto ? crypto.randomUUID() : `sound-${Date.now()}-${Math.random().toString(16).slice(2)}` }
 
-export function PersonalSounds({ engine, onBeforeSourceChange }: Props) {
+export function PersonalSounds({ engine, onBeforeSourceChange, onSourceSelected }: Props) {
   const [sounds, setSounds] = useState<PersonalSound[]>([])
   const [editor, setEditor] = useState<EditorState | null>(null)
   const [message, setMessage] = useState<string | null>(null)
@@ -73,6 +73,7 @@ export function PersonalSounds({ engine, onBeforeSourceChange }: Props) {
       const buffer = await engine.decodeAudioData(record.audioData)
       onBeforeSourceChange()
       engine.setPersonalSound(record, buffer)
+      onSourceSelected?.()
       setActiveId(sound.id)
       setMessage(`Active personal sound: ${sound.name}`)
     } catch (error) { setMessage(error instanceof Error ? error.message : 'Could not select this personal sound.') }
@@ -107,7 +108,7 @@ export function PersonalSounds({ engine, onBeforeSourceChange }: Props) {
   }
   const remove = async (sound: PersonalSound) => {
     if (!window.confirm(`Delete ${sound.name}? This removes its local audio data.`)) return
-    try { await deletePersonalSound(sound.id); if (activeId === sound.id) { onBeforeSourceChange(); engine.setInstrument('warm-pad'); setActiveId(null) } await refresh() }
+    try { await deletePersonalSound(sound.id); if (activeId === sound.id) { onBeforeSourceChange(); engine.setInstrument('warm-pad'); setActiveId(null); onSourceSelected?.() } await refresh() }
     catch (error) { setMessage(error instanceof Error ? error.message : 'Could not delete this personal sound.') }
   }
   const preview = async (sound: PersonalSound) => {

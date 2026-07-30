@@ -6,7 +6,7 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - Left-hand horizontal movement controls distortion.
 - Right-hand vertical movement controls tape delay.
 - Right-hand horizontal movement controls chorus.
-- Built-in sounds, local personal samples, microphone personal-sound recording, and session-only composition layers are available; project saving and arrangement remain future work.
+- Built-in sounds, local personal samples, microphone personal-sound recording, and locally saved composition projects are available; arrangement remains future work.
 - Camera and audio processing should happen locally in the browser.
 
 ## Camera preview
@@ -161,4 +161,15 @@ HandChord is a desktop-first gesture-controlled musical sandbox. Users will sele
 - Effects are baked into a layer while it is recorded. Layer playback bypasses distortion, chorus, tape delay, and reverb so a recorded layer is never double-processed.
 - Users can select a layer, rename it, mute it, solo it, set its nondestructive playback volume from 0% to 150%, replace it, or delete it. Multiple unmuted solo layers may play together.
 - Replace retains the old layer until processing succeeds. Delete, replace, and Clear Composition have one-level destructive Undo.
-- Composition data remains session-only. Project saving is the next milestone; dedicated Vocal Track Recording follows project saving and is not included here.
+- Composition layers can be saved as local browser projects. Dedicated Vocal Track Recording follows project saving and is not included here.
+
+## Local composition projects
+
+- Users can save layered compositions locally, reopen them after refresh or browser restart, and continue recording, replacing, playing, or editing layers.
+- A project stores its 4/4 timing, BPM, bars, exact expected frame count, layer metadata, lossless layer PCM audio, active layer, key, scale, metronome/count-in settings, manual master volume, and selected sound preference.
+- Projects support New, Open, Save, Save As, Rename, Duplicate, and Delete. Unsaved changes require an explicit Save, Discard, or Cancel choice before opening another project or creating a new one.
+- Project metadata and project audio use a versioned local IndexedDB database. Runtime Web Audio objects are never stored. Project PCM is separate from Personal Sound audio; duplicating a project safely duplicates its layer audio records.
+- Opening validates metadata, frame counts, sample rates, channel counts, audio references, mute/solo/volume, and active-layer selection before recreating fresh AudioBuffers. A missing Personal Sound selection falls back to Warm Pad; a missing required layer buffer is shown as unavailable rather than silently played.
+- Projects are local to this browser and device. They are not cloud-synced, exported, shared, or automatically backed up. Clearing browser data may remove them.
+- Calibration remains a device-level preference and is never overwritten by a project. One-level composition Undo remains session-only and is cleared by opening another project or refreshing.
+- Dedicated Vocal Track Recording is the next milestone after local project saving.

@@ -235,3 +235,16 @@
 - Start all layers, Stop, replay, and use both-fist emergency Stop. Confirm fresh sources are created on replay, every active source stops together, and layer buffers remain intact. Play live gesture/button chords over the composition without creating another layer.
 - Test a silent or very quiet capture. Confirm Keep Layer / Cancel is offered before it enters the composition. Test hiding the page during recording, refresh removing composition layers, Personal Sounds and calibration surviving refresh, speaker/headphone output, four-layer CPU/memory use, and no console errors.
 - Known issue: some pitched sampled chords may still have imperfectly equal audible note durations. It remains intentionally unresolved and must not regress.
+
+## Local project saving and management
+
+- Record a one-layer project, use **Save**, name it, refresh Chrome, then use **Open Project**. Confirm timing, layer name, mute, solo, volume, active layer, key, scale, metronome, count-in, manual master volume, and selected built-in instrument restore without starting playback automatically.
+- Repeat with a four-layer composition. Confirm all restored layers share the exact loop duration and start together, both-fist emergency Stop works, and replay creates fresh sources without duplicates.
+- Select a saved Personal Sound, save the project, refresh/restart Chrome, and reopen it. Confirm it restores when still present. Delete that Personal Sound and reopen the project: confirm Warm Pad is selected with a warning while the recorded layer audio still plays.
+- Test **New Project** with unsaved changes: choose Save, Discard, and Cancel separately. Confirm personal sounds and calibration remain untouched, and that a new project unlocks BPM and bar settings.
+- Test Save on an existing project, then Save As. Confirm the copy has a new project ID, its audio remains independent, and deleting either project does not damage the other.
+- Test Project Library Rename, Duplicate, and Delete. Delete the currently open saved project and confirm its runtime composition stays open as an unsaved project. Confirm Delete removes only that project's records, never Personal Sounds, calibration, or another project.
+- Verify project sorting is most recently modified. Test a corrupt project/layer record or missing layer audio only if comfortable: confirm an actionable error or unavailable layer state rather than a crash or silent playback.
+- Check the storage panel, request persistent storage, and verify the local-only notice. Simulate low storage if practical; a save failure must retain the previous saved project. Clearing browser data can remove projects.
+- Test project switching after live gesture/button performance, all four effects, imported sounds, recorded sounds, and looping samples. Confirm no duplicate playback sources, no layer double-processing, no calibration change, no microphone/camera interruption, and no red console errors.
+- Known issue: some pitched sampled chords may still have imperfectly equal audible note durations. This remains intentionally unresolved and must not regress.

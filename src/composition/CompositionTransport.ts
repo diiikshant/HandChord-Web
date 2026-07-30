@@ -3,7 +3,7 @@ import { CompositionPcmRecorder } from './CompositionPcmRecorder.ts'
 import { applyLoopBoundaryCrossfade, clampBoundaryCrossfade, createTransportSchedule, DEFAULT_BOUNDARY_CROSSFADE_SECONDS } from './transportMath.ts'
 import { canTransition } from './transportState.ts'
 import { clampLayerVolume, deriveAudibleLayerIds, validateLayerForSession, validateLayerName } from './layerModel.ts'
-import { DEFAULT_COMPOSITION_SETTINGS, MAX_COMPOSITION_LAYERS, type CompositionLayerMetadata, type CompositionSession, type CompositionSettings, type CompositionTransportSnapshot, type TransportSchedule, type TransportState, type UndoAction } from './compositionTypes.ts'
+import { DEFAULT_COMPOSITION_SETTINGS, MAX_COMPOSITION_LAYERS, type CompositionLayerMetadata, type CompositionRuntimeState, type CompositionSession, type CompositionSettings, type CompositionTransportSnapshot, type TransportSchedule, type TransportState, type UndoAction } from './compositionTypes.ts'
 
 type LayerSource = { layerId: string; source: AudioBufferSourceNode; gain: GainNode; stopped: boolean }
 type PendingRecording = { kind: 'first' | 'add' | 'replace'; replaceLayerId: string | null }
@@ -25,6 +25,7 @@ export class CompositionTransport {
   private compositionBus: GainNode | null = null
   private layerSources = new Map<string, LayerSource>()
   private sharedPlaybackStartTime: number | null = null
+  private persistenceRevision = 0
   private metronomeSources = new Set<OscillatorNode>()
   private listeners = new Set<(snapshot: CompositionTransportSnapshot) => void>()
   private error: string | null = null
@@ -55,6 +56,7 @@ export class CompositionTransport {
       currentBar, currentBeat, remainingCountInBars, loopCycleCount, playbackActive: this.layerSources.size > 0,
       workletStatus: this.recorder?.workletStatus ?? 'idle', recordingTapActive: this.routing !== null, receivedFrameCount: this.receivedFrameCount,
       undoAction: this.undo?.action ?? null, sourceGroupSize: this.layerSources.size,
+      persistenceRevision: this.persistenceRevision,
       sharedPlaybackStartTime: this.sharedPlaybackStartTime, compositionBusActive: this.compositionBus !== null,
       audibleLayerIds: this.composition ? deriveAudibleLayerIds(this.composition.layers) : [],
       mutedLayerIds: this.composition?.layers.filter((layer) => layer.muted).map((layer) => layer.id) ?? [],
@@ -67,7 +69,7 @@ export class CompositionTransport {
   updateSettings(next: Partial<CompositionSettings>) {
     if (this.composition?.layers.length) throw new Error('Clear all composition layers before changing BPM or loop length.')
     if (['armed', 'countingIn', 'recordingLayer', 'processingLayer', 'replacingLayer'].includes(this.state)) throw new Error('Tempo and loop settings cannot change while recording.')
-    this.settings = { ...this.settings, ...next }; this.error = null; this.publish()
+    this.settings = { ...this.settings, ...next }; this.error = null; this.markPersistenceChange(); this.publish()
   }
 
   async recordFirstLayer() { return this.recordLayer({ kind: 'first', replaceLayerId: null }) }
@@ -165,7 +167,7 @@ export class CompositionTransport {
     if (this.state === 'playing') this.transition('stopped', true)
   }
 
-  selectLayer(layerId: string) { if (!this.composition?.layers.some((layer) => layer.id === layerId)) throw new Error('That layer is unavailable.'); this.composition = { ...this.composition, activeLayerId: layerId }; this.publish() }
+  selectLayer(layerId: string) { if (!this.composition?.layers.some((layer) => layer.id === layerId)) throw new Error('That layer is unavailable.'); this.composition = { ...this.composition, activeLayerId: layerId }; this.markPersistenceChange(); this.publish() }
   renameActiveLayer(name: string) { this.updateActiveLayer({ name: validateLayerName(name), modifiedAt: Date.now() }) }
   setLayerMuted(layerId: string, muted: boolean) { this.updateLayer(layerId, { muted, modifiedAt: Date.now() }); this.applyAudibilityToActiveSources(); this.publish() }
   setLayerSolo(layerId: string, solo: boolean) { this.updateLayer(layerId, { solo, modifiedAt: Date.now() }); this.applyAudibilityToActiveSources(); this.publish() }
@@ -178,12 +180,14 @@ export class CompositionTransport {
     const layers = this.composition.layers.filter((layer) => layer.id !== activeId).map((layer, order) => ({ ...layer, order }))
     this.runtimeBuffers.delete(activeId)
     this.composition = layers.length ? { ...this.composition, layers, activeLayerId: layers[0]?.id ?? null, modifiedAt: Date.now() } : null
+    this.markPersistenceChange()
     this.transition(this.composition ? 'compositionReady' : 'idle', true)
   }
 
   clearComposition() {
     if (!this.composition) return
     this.stopAllLayers(); this.storeUndo('clear-composition'); this.composition = null; this.runtimeBuffers.clear(); this.schedule = null; this.pendingSilentLayer = null
+    this.markPersistenceChange()
     this.transition('idle', true)
   }
 
@@ -191,6 +195,36 @@ export class CompositionTransport {
     if (!this.undo) return
     this.stopAllLayers(); this.composition = cloneSession(this.undo.session); this.runtimeBuffers = new Map(this.undo.buffers); this.schedule = this.composition ? this.scheduleForComposition(this.composition, 0) : null
     this.undo = null; this.transition(this.composition ? 'compositionReady' : 'idle', true)
+    this.markPersistenceChange(); this.publish()
+  }
+
+  /** Exports metadata and runtime buffers separately for the local project store. */
+  exportRuntimeState(): CompositionRuntimeState {
+    return { composition: cloneSession(this.composition), buffers: new Map(this.runtimeBuffers), settings: { ...this.settings } }
+  }
+
+  /** Rehydrates a validated project without serialising or reusing Web Audio nodes. */
+  restoreRuntimeState(state: CompositionRuntimeState, warning: string | null = null) {
+    this.cancelRecording('Opening another project cancelled recording.')
+    this.stopAllLayers()
+    this.composition = cloneSession(state.composition)
+    this.runtimeBuffers = new Map(state.buffers)
+    this.settings = { ...state.settings }
+    this.schedule = this.composition ? this.scheduleForComposition(this.composition, 0) : null
+    this.undo = null
+    this.warning = warning
+    this.error = null
+    this.markPersistenceChange()
+    this.transition(this.composition ? 'compositionReady' : 'idle', true)
+  }
+
+  /** Starts a new unsaved project without touching personal sounds or calibration. */
+  newEmptyComposition() {
+    this.cancelRecording('Starting a new project cancelled recording.')
+    this.stopAllLayers()
+    this.composition = null; this.runtimeBuffers.clear(); this.schedule = null; this.undo = null; this.pendingSilentLayer = null; this.warning = null; this.error = null
+    this.markPersistenceChange()
+    this.transition('idle', true)
   }
 
   dispose() { this.cancelRecording('Composition transport disposed.'); this.stopAllLayers(); this.recorder?.dispose(); this.recorder = null; this.compositionBus?.disconnect(); this.compositionBus = null; this.listeners.clear() }
@@ -257,14 +291,15 @@ export class CompositionTransport {
     }
     this.runtimeBuffers.set(pending.metadata.id, pending.buffer); this.pendingSilentLayer = null
     this.warning = pending.metadata.recordingDiscrepancyFrames ? `Layer adjusted by ${pending.metadata.recordingDiscrepancyFrames} frame(s) to match the composition.` : null
+    this.markPersistenceChange()
     this.transition('compositionReady', true)
   }
 
   private ensureCompositionBus(routing: CompositionAudioRouting) { if (!this.compositionBus) { this.compositionBus = routing.context.createGain(); this.compositionBus.gain.setValueAtTime(1, routing.context.currentTime); this.compositionBus.connect(routing.monitoringOutput) } }
   private scheduleForComposition(composition: CompositionSession, now: number) { return createTransportSchedule({ ...this.settings, bpm: composition.bpm, barCount: composition.barCount }, composition.sampleRate, now) }
-  private assertValidCompositionBuffers() { if (!this.composition) return; this.composition.layers.forEach((layer) => { const buffer = this.runtimeBuffers.get(layer.id); if (!buffer) throw new Error(`Layer “${layer.name}” has no runtime audio buffer.`); if (buffer.length !== this.composition!.expectedFrameCount || buffer.sampleRate !== this.composition!.sampleRate) throw new Error(`Layer “${layer.name}” does not match the composition frame timing.`) }) }
+  private assertValidCompositionBuffers() { if (!this.composition) return; this.composition.layers.forEach((layer) => { const buffer = this.runtimeBuffers.get(layer.id); if (!buffer) throw new Error(`Layer “${layer.name}” has no runtime audio buffer.`); if (buffer.length !== this.composition!.expectedFrameCount || buffer.sampleRate !== this.composition!.sampleRate || buffer.numberOfChannels !== layer.channelCount) throw new Error(`Layer “${layer.name}” does not match the composition frame timing.`) }) }
   private updateActiveLayer(update: Partial<CompositionLayerMetadata>) { if (!this.composition?.activeLayerId) throw new Error('Select a layer first.'); this.updateLayer(this.composition.activeLayerId, update) }
-  private updateLayer(layerId: string, update: Partial<CompositionLayerMetadata>) { if (!this.composition?.layers.some((layer) => layer.id === layerId)) throw new Error('That layer is unavailable.'); this.composition = { ...this.composition, layers: this.composition.layers.map((layer) => layer.id === layerId ? { ...layer, ...update } : layer), modifiedAt: Date.now() }; this.publish() }
+  private updateLayer(layerId: string, update: Partial<CompositionLayerMetadata>) { if (!this.composition?.layers.some((layer) => layer.id === layerId)) throw new Error('That layer is unavailable.'); this.composition = { ...this.composition, layers: this.composition.layers.map((layer) => layer.id === layerId ? { ...layer, ...update } : layer), modifiedAt: Date.now() }; this.markPersistenceChange(); this.publish() }
   private applyAudibilityToActiveSources() {
     if (!this.composition || !this.routing) return
     const audible = new Set(deriveAudibleLayerIds(this.composition.layers))
@@ -282,6 +317,7 @@ export class CompositionTransport {
   private stopMetronome() { const now = this.routing?.context.currentTime ?? 0; this.metronomeSources.forEach((source) => { try { source.stop(now) } catch { /* already ended */ } }); this.metronomeSources.clear() }
   private cancelTimers() { if (this.recordingTimer !== null) window.clearTimeout(this.recordingTimer); if (this.countInTimer !== null) window.clearTimeout(this.countInTimer); this.recordingTimer = null; this.countInTimer = null }
   private transition(next: TransportState, force = false) { if (!force && !canTransition(this.state, next)) throw new Error(`Cannot move transport from ${this.state} to ${next}.`); this.state = next; this.publish() }
+  private markPersistenceChange() { this.persistenceRevision += 1 }
   private publish() { this.listeners.forEach((listener) => listener(this.getSnapshot())) }
 }
 

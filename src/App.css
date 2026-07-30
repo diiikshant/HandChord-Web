@@ -637,6 +637,17 @@ button:disabled {
   margin-top: 18px;
 }
 
+.project-list {
+  display: grid;
+  gap: 0.55rem;
+  margin-top: 0.7rem;
+}
+
+.project-list .composition-layer small {
+  display: block;
+  margin-top: 0.25rem;
+}
+
 .composition-layer {
   padding: 12px;
   border: 1px solid var(--border);

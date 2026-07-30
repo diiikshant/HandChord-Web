@@ -12,6 +12,7 @@ import { TapeDelayControl } from './components/TapeDelayControl'
 import { InstrumentSelector } from './components/InstrumentSelector'
 import { PersonalSounds } from './components/PersonalSounds'
 import { CompositionLoop } from './components/CompositionLoop'
+import { ProjectLibrary } from './components/ProjectLibrary'
 import { useCamera } from './hooks/useCamera'
 import { useFingerRecognition } from './hooks/useFingerRecognition'
 import { useHandTracking } from './hooks/useHandTracking'
@@ -24,9 +25,13 @@ import { useChorusControl } from './hooks/useChorusControl'
 import { useTapeDelayControl } from './hooks/useTapeDelayControl'
 import { useInstrumentSelection } from './hooks/useInstrumentSelection'
 import { useCompositionLoop } from './hooks/useCompositionLoop'
+import { useProjectManager } from './hooks/useProjectManager'
+import { getPersonalSound } from './audio/sounds/personalSoundStorage'
+import { isInstrumentId } from './audio/instruments/instrumentPresets'
 import type { InstrumentId } from './audio/instruments/instrumentTypes'
 import type { RootKey, ScaleName } from './music/MusicTheoryEngine'
 import type { CanvasDimensions } from './tracking/handTrackingTypes'
+import type { ProjectPreferences } from './projects/projectTypes'
 import './App.css'
 
 const cameraMessages = {
@@ -58,6 +63,40 @@ function App() {
   const chorus = useChorusControl(engine, movement)
   const tapeDelay = useTapeDelayControl(engine, movement)
   const { instrument, selectInstrument: selectStoredInstrument } = useInstrumentSelection(engine)
+  const projectPreferences = useCallback(() => {
+    const source = engine.getActiveSoundSource()
+    return {
+      root,
+      scale,
+      masterVolume: manualMasterVolume,
+      selectedInstrumentId: source.type === 'built-in' ? source.instrumentId : instrument.id,
+      selectedSoundSourceType: source.type,
+      selectedPersonalSoundId: source.type === 'personal-sample' ? source.soundId : null,
+    }
+  }, [engine, instrument.id, manualMasterVolume, root, scale])
+  const applyProjectPreferences = useCallback(async (preferences: ProjectPreferences) => {
+    setRoot(preferences.root)
+    setScale(preferences.scale)
+    setManualMasterVolume(preferences.masterVolume)
+    engine.setMasterVolume(preferences.masterVolume)
+    if (preferences.selectedSoundSourceType === 'personal-sample' && preferences.selectedPersonalSoundId) {
+      try {
+        const record = await getPersonalSound(preferences.selectedPersonalSoundId)
+        if (record) {
+          engine.setPersonalSound(record, await engine.decodeAudioData(record.audioData))
+          return null
+        }
+      } catch {
+        // A saved project must still open if its separately owned personal sound is corrupt.
+      }
+      engine.setInstrument('warm-pad'); selectStoredInstrument('warm-pad')
+      return 'The Personal Sound selected by this project is no longer available. Warm Pad was selected instead.'
+    }
+    const id = isInstrumentId(preferences.selectedInstrumentId) ? preferences.selectedInstrumentId : 'warm-pad'
+    engine.setInstrument(id); selectStoredInstrument(id)
+    return id === preferences.selectedInstrumentId ? null : 'This project used an unavailable instrument. Warm Pad was selected instead.'
+  }, [engine, selectStoredInstrument])
+  const { manager: projectManager, project } = useProjectManager({ engine, transport, getPreferences: projectPreferences, applyPreferences: applyProjectPreferences })
   const {
     gestureAudio,
     setGestureAudioEnabled,
@@ -76,7 +115,8 @@ function App() {
     // A new preset should begin with fresh voices rather than leaving the old chord running.
     releaseGestureAudioOwnership()
     selectStoredInstrument(id)
-  }, [instrument.id, releaseGestureAudioOwnership, selectStoredInstrument])
+    projectManager.markDirty()
+  }, [instrument.id, projectManager, releaseGestureAudioOwnership, selectStoredInstrument])
 
   const updateCanvasDimensions = useCallback((dimensions: CanvasDimensions) => {
     setCanvasDimensions((current) =>
@@ -207,6 +247,13 @@ function App() {
             </div>
 
             <details className="developer-group" open>
+              <summary>Projects</summary>
+              <div className="developer-group-content">
+                <ProjectLibrary manager={projectManager} project={project} />
+              </div>
+            </details>
+
+            <details className="developer-group" open>
               <summary>Movement &amp; calibration</summary>
               <div className="developer-group-content">
                 <MovementDiagnostics movement={movement} />
@@ -228,19 +275,20 @@ function App() {
               <summary>Sounds &amp; Audio Test</summary>
               <div className="developer-group-content">
                 <InstrumentSelector instrument={instrument} activeVoiceCount={engine.getActiveVoiceCount()} onSelect={selectInstrument} title="Camera performance instrument" />
-                <PersonalSounds engine={engine} onBeforeSourceChange={releaseGestureAudioOwnership} />
+                <PersonalSounds engine={engine} onBeforeSourceChange={releaseGestureAudioOwnership} onSourceSelected={() => projectManager.markDirty()} />
                 <AudioTest
                   engine={engine}
                   audio={audio}
                   root={root}
                   scale={scale}
-                  onRootChange={setRoot}
-                  onScaleChange={setScale}
+                  onRootChange={(nextRoot) => { setRoot(nextRoot); projectManager.markDirty() }}
+                  onScaleChange={(nextScale) => { setScale(nextScale); projectManager.markDirty() }}
                   onManualAudioAction={releaseGestureAudioOwnership}
-                  onMasterVolumeChange={setManualMasterVolume}
+                  onMasterVolumeChange={(volume) => { setManualMasterVolume(volume); projectManager.markDirty() }}
                   instrument={instrument}
                   activeVoiceCount={engine.getActiveVoiceCount()}
                   onInstrumentChange={selectInstrument}
+                  masterVolume={manualMasterVolume}
                 />
               </div>
             </details>
